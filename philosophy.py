@@ -12,6 +12,7 @@ rather than warning about them
 
 from __future__ import print_function
 import requests
+import time
 from requests.exceptions import ConnectionError
 import lxml.html as lh
 import json
@@ -152,11 +153,13 @@ def main():
 
 	game = PhilosophyGame()
 	try:
+		start_time = time.time()
 		game.trace(page)
 	except KeyboardInterrupt:
 		print('\n---\nScript interrupted', file=sys.stderr)
-		print('Visited %d link(s), never reached Philosophy' 
-				% game.link_count, file=sys.stderr)
+		print('Visited %d link(s), never reached Philosophy, taking %s seconds'
+				% (game.link_count, round(time.time() - start_time, 4)),
+				file=sys.stderr)
 		sys.exit(1)
 	except ConnectionError:
 		sys.exit('Network error, please check your connection')
@@ -164,10 +167,12 @@ def main():
 		sys.exit('Error: %s: %s' % (e.errors['code'], e.errors['info']))
 	except LoopException:
 		print('---\nLoop detected, quitting...', file=sys.stderr)
-		sys.exit('Visited %d links, got a loop' % game.link_count)
+		sys.exit('Visited %d links, got a loop in %s seconds' 
+				% (game.link_count, round(time.time() - start_time, 4)))
 		
 	print('---')
-	print('Took %d link(s)' % game.link_count)
+	print('Took %d link(s) and %s seconds'
+		% (game.link_count, round(time.time() - start_time, 4)))
 
 
 if __name__ == '__main__':
