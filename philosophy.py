@@ -128,7 +128,7 @@ class PhilosophyGame():
 			# Eliminate named anchor, if any
 			pos = next_page.find('#')
 			if pos != -1:
-				next_page = next_page[pos:]
+				next_page = next_page[:pos]
 
 			# Links use an underscore ('_')
 			# instead of a space (' '), this
@@ -166,9 +166,10 @@ def main():
 	except MediaWikiError as e:
 		sys.exit('Error: %s: %s' % (e.errors['code'], e.errors['info']))
 	except LoopException:
-		print('---\nLoop detected, quitting...', file=sys.stderr)
-		sys.exit('Visited %d links, got a loop in %s seconds' 
+		print('---\nLoop detected, quitting...')
+		print('Visited %d links, got a loop in %s seconds' 
 				% (game.link_count, round(time.time() - start_time, 4)))
+		sys.exit(1)
 		
 	print('---')
 	print('Took %d link(s) and %s seconds'
