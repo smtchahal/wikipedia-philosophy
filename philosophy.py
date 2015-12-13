@@ -104,7 +104,7 @@ class PhilosophyGame():
 		# This takes care of most MediaWiki templates,
 		# images, red links, hatnotes, italicized text 
 		# and anything that's strictly not text-only
-		for elm in html.cssselect('.reference,div[class],table,a.new,i'):
+		for elm in html.cssselect('.reference,div[class],table,a.new,i,#coordinates'):
 			elm.drop_tree()
 
 		for elm, attr, link, pos in html.iterlinks():
