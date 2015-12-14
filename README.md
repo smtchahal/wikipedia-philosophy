@@ -6,8 +6,8 @@ A simple Python script that plays Wikipedia's ["Getting to Philosophy" game](htt
 Fire up your favorite terminal emulator, grant the script execute permission, and run the script with the initial Wikipedia page name as the first parameter. On a typical linux distro, the transcript might look like this.
 
 ```
-$ chmod +x philosophy.py
-$ ./philosophy.py "Python (programming language)"
+$ chmod +x example.py
+$ ./example.py "Python (programming language)"
 General-purpose programming language
 Computer software
 Computer

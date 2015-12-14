@@ -72,6 +72,9 @@ class PhilosophyGame():
 
         Args:
             page: The Wikipedia page name to visit.
+        Returns:
+            A generator with the page names generated in sequence
+            at run-time.
         Raises:
             MediaWikiError: if MediaWiki API responds with an error
             requests.exceptions.ConnectionError: if cannot initiate request
