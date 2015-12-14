@@ -38,16 +38,30 @@ Handling errors:
     ...     sys.exit(e)
     ... except LinkNotFoundError as e:
     ...     sys.exit(e)
+
+Advanced options:
+
+In this example, we set `end` to 'Multicellular organism', so that
+instead of stopping at 'Philosophy', trace() stops there.
+    >>> game = PhilosophyGame(page='Sandwich', end='Multicellular organism'):
+
+In the following example, we set `dont_stop` to True, so that
+trace() disregards the value of `end` and doesn't stop.
+    >>> game = PhilosophyGame(page='Sliced bread', dont_stop=True)
+
+Note that trace() will always raise exceptions in case a loop
+is detected or if valid link cannot be found within the page.
 """
 
 import requests
+import urllib
 from requests.exceptions import ConnectionError
 import lxml.html as lh
 import json
 
 class MediaWikiError(Exception):
     """
-    Thrown when the MediaWiki API returns an error.
+    Raised when the MediaWiki API returns an error.
     """
     def __init__(self, message, errors):
         super(MediaWikiError, self).__init__(message)
@@ -55,20 +69,20 @@ class MediaWikiError(Exception):
 
 class LoopException(Exception):
     """
-    Thrown when a loop is detected.
+    Raised when a loop is detected.
     """
     pass
 
 class InvalidPageNameError(Exception):
     """
-    Thrown when an invalid page name is
-    passed to self.trace()
+    Raised when an invalid page name is
+    passed to self.trace().
     """
     pass
 
 class LinkNotFoundError(Exception):
     """
-    Thrown when no appropriate link is found
+    Raised when no appropriate link is found.
     after parsing.
     """
     pass
@@ -79,7 +93,7 @@ class PhilosophyGame():
     """
     url = 'https://en.wikipedia.org/w/api.php'
     headers = { 'User-Agent': 'The Philosophy Game/0.1' }
-    def __init__(self, page=None):
+    def __init__(self, page=None, end='Philosophy', dont_stop=False):
         """
         Initialize object with initial page name to start with.
 
@@ -105,6 +119,8 @@ class PhilosophyGame():
                     .format(self.page))
         self.link_count = 0
         self.visited = []
+        self.end = end
+        self.dont_stop = dont_stop
 
     @staticmethod
     def strip_parentheses(string):
@@ -149,8 +165,7 @@ class PhilosophyGame():
         """
         Checks for valid mainspace Wikipedia page name
         """
-        return (page.find('(disambiguation)') == -1
-            and page.find('File:') == -1
+        return (page.find('File:') == -1
             and page.find('File talk') == -1
             and page.find('Wikipedia:') == -1
             and page.find('Wikipedia talk:') == -1
@@ -165,14 +180,13 @@ class PhilosophyGame():
             and page.find('Template talk:') == -1
             and page.find('Talk:') == -1
             and page.find('Category:') == -1
-            and page.find('Category talk:') == -1
-            and page.find('Main Page') == -1)
+            and page.find('Category talk:') == -1)
 
     def trace(self, page=None):
         """
         Visit the first non-italicized, not-within-parentheses
-            link of page recursively until the page 'Philosophy'
-            is reached.
+            link of page recursively until the page self.end
+            (default: 'Philosophy') is reached.
 
         Args:
             page: The Wikipedia page name to visit
@@ -193,15 +207,17 @@ class PhilosophyGame():
             page = self.page
 
         yield page
-        if page == 'Philosophy':
-            return
+        if not self.dont_stop:
+            if page == self.end:
+                return
         if not PhilosophyGame.valid_page_name(page):
             raise InvalidPageNameError("Invalid page name '{0}'"
                     .format(page))
         params = dict(action='parse', page=page, prop='text',
                     section=0, format='json', redirects=1)
 
-        response = requests.get(self.url, params=params, headers=self.headers)
+        response = requests.get(self.url, params=params,
+                    headers=self.headers)
         res_json = json.loads(response.content)
 
         if 'error' in res_json:
@@ -234,6 +250,9 @@ class PhilosophyGame():
 
             # Extract the Wikipedia page name
             next_page = next_page[len('/wiki/'):]
+
+            # Decode escaped characters
+            next_page = urllib.unquote(next_page)
 
             # Skip non-valid names
             if not PhilosophyGame.valid_page_name(next_page):

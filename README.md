@@ -23,10 +23,11 @@ from philosophy import *
 my_first_wiki_page = 'Python (programming language)'
 game = PhilosophyGame()
 for s in game.trace(my_first_wiki_page):
-    print s
+    print(s)
 ```
 
 ## Handling errors
+
 ```python
 from philosophy import *
 my_first_wiki_page = 'Python (programming language)'
@@ -47,26 +48,42 @@ except InvalidPageNameError as e:
 	# raised when an invalid pagename is passed to trace()
     sys.exit(e)
 except LinkNotFoundError as e:
-	# raised when no appropriate link could be found in the article
+	# raised when no valid link could be found in the article
     sys.exit(e)
 ```
+
+## Advanced options
+
+In this example, we set `end` to 'Multicellular organism', so that
+instead of stopping at 'Philosophy', trace() stops there.
+
+```python
+game = PhilosophyGame(page='Sandwich', end='Multicellular organism')
+```
+
+In the following example, we set `dont_stop` to `True`, so that
+trace() disregards the value of `end` and doesn't stop.
+
+```python
+game = PhilosophyGame(page='Sliced bread', dont_stop=True,
+				end="Doesn't matter")
+```
+
+Note that trace() will always raise exceptions in case a loop is detected
+or if a valid link cannot be found within the page.
 
 ## Dependencies
 Wikipedia Philosophy Game depends on the following Python libraries.
 * [Requests](http://docs.python-requests.org/)
 * [lxml](http://lxml.de/)
 
-## Example
-I've included a simple ready-to-use [example script](example.py) that you can
-start using immediately without making your own.
+## Example script
+I've included a simple ready-to-use [example script](example.py) that you
+can start using immediately without making your own.
 
-Just fire up your favorite terminal emulator, grant the script execute
-permission, and run the script with the initial Wikipedia page name
-as the first parameter. On a linux distro, the transcript
-might look like this.
-
+### Usage examples
+Here's the simplest example.
 ```
-$ chmod +x example.py
 $ ./example.py "Python (programming language)"
 General-purpose programming language
 Computer software
@@ -83,4 +100,64 @@ Modern philosophy
 Philosophy
 ---
 Took 13 link(s) and 33.8522 seconds
+```
+As you may see, the script starts at the Wikipedia page
+"Python (programming language)" and ends at "Philosophy".
+
+Here's another version.
+```
+$ ./example.py Sandwich --end "Multicellular organism"
+Sandwich
+Vegetable
+Fruit
+Botany
+Plant
+Multicellular organism
+---
+Took 15 link(s) and 35.6163 seconds
+```
+In this example, we set the `end` parameter to "Multicellular organism",
+so we're telling the script to stop at "Multicellular organism"
+instead of "Philosophy". You can also use the `-e` for setting the
+`end` parameter.
+
+The following version only stops when loops are detected or when a
+valid link cannot be found, ignoring the value of the `end` parameter.
+```
+$ ./example.py --dont-stop --end "Doesn't matter"
+Shpolskii matrix
+Phonon
+Physics
+Natural science
+Science
+Knowledge
+Awareness
+Conscious
+Quality (philosophy)
+Philosophy
+Reality
+Existence
+Ontology
+---
+Loop detected, quitting...
+Visited 12 link(s), got a loop, taking 28.1101 seconds
+```
+
+You can always view help for the script using the `--help` (or `-h`)
+parameter.
+```
+./example.py --help
+usage: example.py [-h] [-e end] [-d] [initial-pagename [initial-pagename ...]]
+
+Play The Philosophy Game
+
+positional arguments:
+  initial-pagename   the initial Wikipedia pagename to start with
+
+optional arguments:
+  -h, --help         show this help message and exit
+  -e end, --end end  Wikipedia pagename to terminate at (default:
+                     'Philosophy')
+  -d, --dont-stop    don't stop execution until a loop is found or a valid
+                     link cannot be found
 ```
