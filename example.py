@@ -5,15 +5,20 @@ from sys import argv
 import sys
 import time
 
-if len(argv) != 2:
-    sys.exit('Usage: {0} "Wikipedia page"'.format(argv[0]))
+if len(argv) == 1:
+    game = PhilosophyGame()
+else:
+    page = ''
+    for i in xrange(1, len(argv)):
+        if i > 1:
+            page += ' ' + argv[i]
+        else:
+            page += argv[i]
+    game = PhilosophyGame(page)
 
-page = argv[1]
-
-game = PhilosophyGame(page)
 try:
     start_time = time.time()
-    for s in game.trace(page):
+    for s in game.trace():
         print(s)
 except KeyboardInterrupt:
     print('\n---\nScript interrupted', file=sys.stderr)
@@ -30,15 +35,15 @@ except LoopException:
             .format(game.link_count, round(time.time() - start_time, 4)))
     sys.exit(1)
 except InvalidPageNameError as e:
-    print('InvalidPageNameError: {0}'.format(e), file=sys.stderr)
+    print(e, file=sys.stderr)
     print('Visited {0} link(s), got an invalid page name, taking {1} seconds'
             .format(game.link_count, round(time.time() - start_time, 4)))
     sys.exit(1)
 except LinkNotFoundError as e:
-    print('Visited {0} link(s), could not find appropriate link,\
-            taking {1} seconds'
+    print('Visited {0} link(s),', 'could not find appropriate link',
+            'in last link, taking {1} seconds'
             .format(game.link_count, round(time.time() - start_time, 4)))
-    sys.exit('LinkNotFoundError: {0}'.format(e))
+    sys.exit(e)
 
 print('---')
 print('Took {0} link(s) and {1} seconds'

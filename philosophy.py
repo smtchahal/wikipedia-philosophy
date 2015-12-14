@@ -17,7 +17,7 @@ Basic usage:
     >>> from philosophy import *
     >>> game = PhilosophyGame('Python (programming language)')
     >>> for s in game.trace():
-    ...     print s
+    ...     print(s)
     ...
     >>>
 
@@ -69,7 +69,7 @@ class InvalidPageNameError(Exception):
 class LinkNotFoundError(Exception):
     """
     Thrown when no appropriate link is found
-    after parsing
+    after parsing.
     """
     pass
 
@@ -77,23 +77,34 @@ class PhilosophyGame():
     """
     The main PhilosophyGame class.
     """
-    def __init__(self, page):
+    url = 'https://en.wikipedia.org/w/api.php'
+    headers = { 'User-Agent': 'The Philosophy Game/0.1' }
+    def __init__(self, page=None):
         """
         Initialize object with initial page name to start with.
 
         Args:
-            page: the initial page name to start with.
+            page: the initial page name to start with. (optional,
+            defaults to a random page)
 
         Raises:
             InvalidPageNameError: if page is not a valid mainspace
             page name
         """
-        if not PhilosophyGame.valid_page_name(page):
+        if page is None:
+            params = dict(action='query', list='random', rnlimit=1,
+                        rnnamespace=0, format='json')
+            response = requests.get(self.url, params=params,
+                                headers=self.headers)
+            self.page = json.loads(response.content)['query']['random'][0]['title']
+        else:
+            self.page = page
+
+        if not PhilosophyGame.valid_page_name(self.page):
             raise InvalidPageNameError("Invalid page name '{0}'"
-                    .format(page))
+                    .format(self.page))
         self.link_count = 0
         self.visited = []
-        self.page = page
 
     @staticmethod
     def strip_parentheses(string):
@@ -180,17 +191,17 @@ class PhilosophyGame():
 
         if page is None:
             page = self.page
+
+        yield page
         if page == 'Philosophy':
             return
         if not PhilosophyGame.valid_page_name(page):
             raise InvalidPageNameError("Invalid page name '{0}'"
                     .format(page))
-        url = 'https://en.wikipedia.org/w/api.php'
         params = dict(action='parse', page=page, prop='text',
                     section=0, format='json', redirects=1)
 
-        headers = { 'User-Agent': 'The Philosophy Game/0.1' }
-        response = requests.get(url, params=params, headers=headers)
+        response = requests.get(self.url, params=params, headers=self.headers)
         res_json = json.loads(response.content)
 
         if 'error' in res_json:
@@ -199,14 +210,17 @@ class PhilosophyGame():
                 'info': res_json['error']['info']})
 
         raw_html = res_json['parse']['text']['*'].encode('utf-8')
-        html = lh.fromstring(PhilosophyGame.strip_parentheses(raw_html))
+        html = lh.fromstring(raw_html)
 
         # This takes care of most MediaWiki templates,
         # images, red links, hatnotes, italicized text
         # and anything that's strictly not text-only
-        for elm in html.cssselect('.reference,div[class],table,a.new,i,#coordinates'):
+        for elm in html.cssselect('.reference,span,div,.thumb,'
+                    + 'table,a.new,i,#coordinates'):
             elm.drop_tree()
 
+        html = lh.fromstring(PhilosophyGame.strip_parentheses(
+                    lh.tostring(html)))
         link_found = False
         for elm, attr, link, pos in html.iterlinks():
             # Because .iterlinks() picks up 'src' and the like too
@@ -244,10 +258,10 @@ class PhilosophyGame():
             self.visited.append(page)
 
             # Recursively yield
-            yield next_page
             for m in self.trace(next_page):
                 yield m
+
             break
         if not link_found:
-            raise LinkNotFoundError('No appropriate link found in page {0}'
-                    .format(page))
+            raise LinkNotFoundError(('No appropriate link found in page {0}, ' +
+                    'probably a disambiguation page').format(page))
