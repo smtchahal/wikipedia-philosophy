@@ -1,11 +1,43 @@
 """
-This script plays Wikipedia's philosophy game
-(http://en.wikipedia.org/wiki/Wikipedia:Getting_to_Philosophy)
-for you.
+The Philosophy Game
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note that this script simply skips
-non-existent pages ("red links"),
-rather than warning about them
+Clicking on the first non-parenthesized, non-italicized link,
+in the main text of a Wikipedia article, and then repeating
+the process for subsequent articles, usually eventually gets
+one to the Philosophy article. (See
+https://en.wikipedia.org/wiki/Wikipedia:Getting_to_Philosophy
+for more information)
+
+The Philosophy Game, written in Python, lets you do the clicking
+programmatically.
+
+Basic usage:
+
+    >>> from philosophy import *
+    >>> game = PhilosophyGame('Python (programming language)')
+    >>> for s in game.trace():
+    ...     print s
+    ...
+    >>>
+
+Handling errors:
+    >>> from philosophy import *
+    >>> game = PhilosophyGame('Python (programming language)')
+    >>> try:
+    ...     for s in game.trace():
+    ...         print(s)
+    ... except ConnectionError:
+    ...     sys.exit('Network error, please check your connection')
+    ... except MediaWikiError as e:
+    ...     sys.exit('MediaWiki API error {1}: {2}'.format(e.errors['code'],
+    ...                                                e.errors['info']))
+    ... except LoopException:
+    ...     sys.exit('Loop detected, exiting...')
+    ... except InvalidPageNameError as e:
+    ...     sys.exit(e)
+    ... except LinkNotFoundError as e:
+    ...     sys.exit(e)
 """
 
 import requests
@@ -14,17 +46,54 @@ import lxml.html as lh
 import json
 
 class MediaWikiError(Exception):
+    """
+    Thrown when the MediaWiki API returns an error.
+    """
     def __init__(self, message, errors):
         super(MediaWikiError, self).__init__(message)
         self.errors = errors
 
 class LoopException(Exception):
+    """
+    Thrown when a loop is detected.
+    """
+    pass
+
+class InvalidPageNameError(Exception):
+    """
+    Thrown when an invalid page name is
+    passed to self.trace()
+    """
+    pass
+
+class LinkNotFoundError(Exception):
+    """
+    Thrown when no appropriate link is found
+    after parsing
+    """
     pass
 
 class PhilosophyGame():
-    def __init__(self):
+    """
+    The main PhilosophyGame class.
+    """
+    def __init__(self, page):
+        """
+        Initialize object with initial page name to start with.
+
+        Args:
+            page: the initial page name to start with.
+
+        Raises:
+            InvalidPageNameError: if page is not a valid mainspace
+            page name
+        """
+        if not PhilosophyGame.valid_page_name(page):
+            raise InvalidPageNameError("Invalid page name '{0}'"
+                    .format(page))
         self.link_count = 0
         self.visited = []
+        self.page = page
 
     @staticmethod
     def strip_parentheses(string):
@@ -64,31 +133,64 @@ class PhilosophyGame():
 
         return result
 
+    @staticmethod
+    def valid_page_name(page):
+        """
+        Checks for valid mainspace Wikipedia page name
+        """
+        return (page.find('(disambiguation)') == -1
+            and page.find('File:') == -1
+            and page.find('File talk') == -1
+            and page.find('Wikipedia:') == -1
+            and page.find('Wikipedia talk:') == -1
+            and page.find('Project:') == -1
+            and page.find('Project talk:') == -1
+            and page.find('Portal:') == -1
+            and page.find('Portal talk:') == -1
+            and page.find('Special:') == -1
+            and page.find('Help:') == -1
+            and page.find('Help talk:') == -1
+            and page.find('Template:') == -1
+            and page.find('Template talk:') == -1
+            and page.find('Talk:') == -1
+            and page.find('Category:') == -1
+            and page.find('Category talk:') == -1
+            and page.find('Main Page') == -1)
 
-    def trace(self, page):
-        """Visit the first non-italicized, not-within-parentheses
+    def trace(self, page=None):
+        """
+        Visit the first non-italicized, not-within-parentheses
             link of page recursively until the page 'Philosophy'
             is reached.
 
         Args:
-            page: The Wikipedia page name to visit.
+            page: The Wikipedia page name to visit
+            (optional, defaults to self.page)
         Returns:
             A generator with the page names generated in sequence
-            at run-time.
+            in real time.
         Raises:
             MediaWikiError: if MediaWiki API responds with an error
             requests.exceptions.ConnectionError: if cannot initiate request
             LoopException: if a loop is detected
-
+            InvalidPageNameError: if invalid page name is passed as argument
+            LinkNotFoundError: if an appropraite link cannot be found for
+            page
         """
-            
+
+        if page is None:
+            page = self.page
         if page == 'Philosophy':
             return
+        if not PhilosophyGame.valid_page_name(page):
+            raise InvalidPageNameError("Invalid page name '{0}'"
+                    .format(page))
         url = 'https://en.wikipedia.org/w/api.php'
-        payload = dict(action='parse', page=page, prop='text', 
+        params = dict(action='parse', page=page, prop='text',
                     section=0, format='json', redirects=1)
 
-        response = requests.get(url, params=payload)
+        headers = { 'User-Agent': 'The Philosophy Game/0.1' }
+        response = requests.get(url, params=params, headers=headers)
         res_json = json.loads(response.content)
 
         if 'error' in res_json:
@@ -100,13 +202,14 @@ class PhilosophyGame():
         html = lh.fromstring(PhilosophyGame.strip_parentheses(raw_html))
 
         # This takes care of most MediaWiki templates,
-        # images, red links, hatnotes, italicized text 
+        # images, red links, hatnotes, italicized text
         # and anything that's strictly not text-only
         for elm in html.cssselect('.reference,div[class],table,a.new,i,#coordinates'):
             elm.drop_tree()
 
+        link_found = False
         for elm, attr, link, pos in html.iterlinks():
-            # Because .iterlinks() picks up 'src' links too
+            # Because .iterlinks() picks up 'src' and the like too
             if attr != 'href':
                 continue
             next_page = link
@@ -118,24 +221,25 @@ class PhilosophyGame():
             # Extract the Wikipedia page name
             next_page = next_page[len('/wiki/'):]
 
-            # Eliminates pages outside of mainspace
-            if next_page.find(':') != -1:
+            # Skip non-valid names
+            if not PhilosophyGame.valid_page_name(next_page):
                 continue
-
-            # Eliminate named anchor, if any
-            pos = next_page.find('#')
-            if pos != -1:
-                next_page = next_page[:pos]
 
             # Links use an underscore ('_')
             # instead of a space (' '), this
             # fixes that
             next_page = next_page.replace('_', ' ')
 
+            # Eliminate named anchor, if any
+            pos = next_page.find('#')
+            if pos != -1:
+                next_page = next_page[:pos]
+
             # Detect loop
             if next_page in self.visited:
                 raise LoopException('Loop detected')
 
+            link_found = True
             self.link_count += 1
             self.visited.append(page)
 
@@ -144,3 +248,6 @@ class PhilosophyGame():
             for m in self.trace(next_page):
                 yield m
             break
+        if not link_found:
+            raise LinkNotFoundError('No appropriate link found in page {0}'
+                    .format(page))
