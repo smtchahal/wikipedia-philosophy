@@ -110,7 +110,8 @@ class PhilosophyGame():
                         rnnamespace=0, format='json')
             response = requests.get(self.url, params=params,
                                 headers=self.headers)
-            self.page = json.loads(response.content)['query']['random'][0]['title']
+            reply = response.content.decode()
+            self.page = json.loads(reply)['query']['random'][0]['title']
         else:
             self.page = page
 
@@ -218,7 +219,7 @@ class PhilosophyGame():
 
         response = requests.get(self.url, params=params,
                     headers=self.headers)
-        res_json = json.loads(response.content)
+        res_json = json.loads(response.content.decode())
 
         if 'error' in res_json:
             raise MediaWikiError('MediaWiki error',
@@ -232,11 +233,11 @@ class PhilosophyGame():
         # images, red links, hatnotes, italicized text
         # and anything that's strictly not text-only
         for elm in html.cssselect('.reference,span,div,.thumb,'
-                    + 'table,a.new,i,#coordinates'):
+                                + 'table,a.new,i,#coordinates'):
             elm.drop_tree()
 
         html = lh.fromstring(PhilosophyGame.strip_parentheses(
-                    lh.tostring(html)))
+                            lh.tostring(html)))
         link_found = False
         for elm, attr, link, pos in html.iterlinks():
             # Because .iterlinks() picks up 'src' and the like too
@@ -282,5 +283,6 @@ class PhilosophyGame():
 
             break
         if not link_found:
-            raise LinkNotFoundError(('No appropriate link found in page {0}, ' +
-                    'probably a disambiguation page').format(page))
+            raise LinkNotFoundError(
+                    ('No appropriate link found in page {0}, '
+                    + 'probably a disambiguation page').format(page))

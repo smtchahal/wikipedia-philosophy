@@ -29,27 +29,33 @@ try:
     start_time = time.time()
     for s in game.trace():
         print(s)
+
 except KeyboardInterrupt:
     print('\n---\nScript interrupted', file=sys.stderr)
     print('Visited {0} link(s), never reached {1}, taking {2} seconds'
-            .format(game.link_count, game.end,
-            round(time.time() - start_time, 4)))
+        .format(game.link_count, game.end,
+        round(time.time() - start_time, 4)))
     sys.exit(1)
+
 except ConnectionError:
     sys.exit('Network error, please check your connection')
+
 except MediaWikiError as e:
     sys.exit('Error: {0}: {1}'.format(e.errors['code'], e.errors['info']))
+
 except LoopException:
     print('---\nLoop detected, quitting...')
     print('Visited {0} link(s), got a loop, taking {1} seconds'
             .format(game.link_count, round(time.time() - start_time, 4)))
     sys.exit(1)
+
 except InvalidPageNameError as e:
     print('---')
     print(e, file=sys.stderr)
     print('Visited {0} link(s), got an invalid page name, taking {1} seconds'
             .format(game.link_count, round(time.time() - start_time, 4)))
     sys.exit(1)
+
 except LinkNotFoundError as e:
     print('---')
     print(e, file=sys.stderr)
