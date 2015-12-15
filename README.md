@@ -84,7 +84,8 @@ can start using immediately without making your own.
 ### Usage examples
 Here's the simplest example.
 ```
-$ ./example.py "Python (programming language)"
+$ ./example.py
+Python (programming language)
 General-purpose programming language
 Computer software
 Computer
@@ -116,10 +117,10 @@ Multicellular organism
 ---
 Took 15 link(s) and 35.6163 seconds
 ```
-In this example, we set the `end` parameter to "Multicellular organism",
-so we're telling the script to stop at "Multicellular organism"
-instead of "Philosophy". You can also use the `-e` for setting the
-`end` parameter.
+In this example, we start with "Sandwich" and set the `end` parameter to
+"Multicellular organism", so we're telling the script to stop at
+"Multicellular organism" instead of "Philosophy". You can also use the
+`-e` option for setting the `end` parameter.
 
 The following version only stops when loops are detected or when a
 valid link cannot be found, ignoring the value of the `end` parameter.
@@ -146,7 +147,7 @@ Visited 12 link(s), got a loop, taking 28.1101 seconds
 You can always view help for the script using the `--help` (or `-h`)
 parameter.
 ```
-./example.py --help
+$ ./example.py --help
 usage: example.py [-h] [-e end] [-d] [initial-pagename [initial-pagename ...]]
 
 Play The Philosophy Game
