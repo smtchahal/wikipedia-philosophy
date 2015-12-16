@@ -78,6 +78,8 @@ Wikipedia Philosophy Game depends on the following Python libraries.
 * [lxml](http://lxml.de/)
 
 ## Example script
+![example.py script in action](example.gif?raw=true "example.py script in action")
+
 I've included a simple ready-to-use [example script](example.py) that you
 can start using immediately without making your own.
 
@@ -147,18 +149,22 @@ Visited 12 link(s), got a loop, taking 28.1101 seconds
 You can always view help for the script using the `--help` (or `-h`)
 parameter.
 ```
-$ ./example.py --help
-usage: example.py [-h] [-e end] [-d] [initial-pagename [initial-pagename ...]]
+usage: example.py [-h] [-e end [end ...]] [-d] [-t times]
+                  [initial-pagename [initial-pagename ...]]
 
 Play The Philosophy Game
 
 positional arguments:
-  initial-pagename   the initial Wikipedia pagename to start with
+  initial-pagename      the initial Wikipedia pagename to start with
 
 optional arguments:
-  -h, --help         show this help message and exit
-  -e end, --end end  Wikipedia pagename to terminate at (default:
-                     'Philosophy')
-  -d, --dont-stop    don't stop execution until a loop is found or a valid
-                     link cannot be found
+  -h, --help            show this help message and exit
+  -e end [end ...], --end end [end ...]
+                        Wikipedia pagename to terminate at (default:
+                        'Philosophy')
+  -d, --dont-stop       don't stop execution until a loop is found or a valid
+                        link cannot be found
+  -t times, --times times
+                        run the script this many times (default: 1) (anything
+                        less than 1 is infinity)
 ```

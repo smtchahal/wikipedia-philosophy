@@ -284,5 +284,4 @@ class PhilosophyGame():
             break
         if not link_found:
             raise LinkNotFoundError(
-                    ('No appropriate link found in page {0}, '
-                    + 'probably a disambiguation page').format(page))
+                    ('No appropriate link found in page "{0}"').format(page))
