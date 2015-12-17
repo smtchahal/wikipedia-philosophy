@@ -91,8 +91,8 @@ class PhilosophyGame():
     """
     The main PhilosophyGame class.
     """
-    url = 'https://en.wikipedia.org/w/api.php'
-    headers = { 'User-Agent': 'The Philosophy Game/0.1' }
+    BASE_URL = 'https://en.wikipedia.org/w/api.php'
+    HEADERS = { 'User-Agent': 'The Philosophy Game/0.1' }
     def __init__(self, page=None, end='Philosophy', dont_stop=False):
         """
         Initialize object with initial page name to start with.
@@ -108,8 +108,8 @@ class PhilosophyGame():
         if page is None:
             params = dict(action='query', list='random', rnlimit=1,
                         rnnamespace=0, format='json')
-            response = requests.get(self.url, params=params,
-                                headers=self.headers)
+            response = requests.get(self.BASE_URL, params=params,
+                                headers=self.HEADERS)
             reply = response.content.decode()
             self.page = json.loads(reply)['query']['random'][0]['title']
         else:
@@ -117,7 +117,7 @@ class PhilosophyGame():
 
         if not PhilosophyGame.valid_page_name(self.page):
             raise InvalidPageNameError("Invalid page name '{0}'"
-                    .format(self.page))
+                                        .format(self.page))
         self.link_count = 0
         self.visited = []
         self.end = end
@@ -190,11 +190,11 @@ class PhilosophyGame():
             (default: 'Philosophy') is reached.
 
         Args:
-            page: The Wikipedia page name to visit
+            page: The Wikipedia page name to start with
             (optional, defaults to self.page)
         Returns:
             A generator with the page names generated in sequence
-            in real time.
+            in real time (including self.end).
         Raises:
             MediaWikiError: if MediaWiki API responds with an error
             requests.exceptions.ConnectionError: if cannot initiate request
@@ -207,18 +207,14 @@ class PhilosophyGame():
         if page is None:
             page = self.page
 
-        yield page
-        if not self.dont_stop:
-            if page == self.end:
-                return
         if not PhilosophyGame.valid_page_name(page):
             raise InvalidPageNameError("Invalid page name '{0}'"
                     .format(page))
         params = dict(action='parse', page=page, prop='text',
                     section=0, format='json', redirects=1)
 
-        response = requests.get(self.url, params=params,
-                    headers=self.headers)
+        response = requests.get(self.BASE_URL, params=params,
+                    headers=self.HEADERS)
         res_json = json.loads(response.content.decode())
 
         if 'error' in res_json:
@@ -226,6 +222,12 @@ class PhilosophyGame():
                 {'code': res_json['error']['code'],
                 'info': res_json['error']['info']})
 
+        title = res_json['parse']['title'].encode('utf-8')
+        yield title
+
+        # This needs to be done AFTER yield title
+        if not self.dont_stop and page == self.end:
+            return
         raw_html = res_json['parse']['text']['*'].encode('utf-8')
         html = lh.fromstring(raw_html)
 

@@ -5,47 +5,66 @@ import sys
 import time
 import argparse
 
-def process(game):
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def print_err(msg):
+    print('{0}{1}{2}{3}'.format(bcolors.FAIL,
+                                bcolors.BOLD,
+                                msg,
+                                bcolors.ENDC),
+                    file=sys.stderr)
+
+def print_log(msg):
+    print(bcolors.OKGREEN + msg + bcolors.ENDC)
+
+def process(game, start_time):
     try:
         for s in game.trace():
+            if s == game.end:
+                print(bcolors.BOLD + s + bcolors.ENDC)
+                return True
             print(s)
-    except KeyboardInterrupt:
-        print('\n---\nScript interrupted', file=sys.stderr)
-        print('Visited {0} link(s), never reached "{1}", taking {2} seconds'
-            .format(game.link_count,
-            game.end,
-            round(time.time() - start_time, 4)))
-        sys.exit(1)
-
     except ConnectionError:
         return False
         sys.exit('Network error, please check your connection')
 
     except MediaWikiError as e:
-        print('Error: {0}: {1}'.format(e.errors['code'], e.errors['info'],
-                file=sys.stderr))
+        print_err('Error: {0}: {1}'.format(
+                    e.errors['code'],
+                    e.errors['info']))
         return False
 
     except LoopException:
-        print('---\nLoop detected, quitting...')
-        print('Visited {0} link(s), got a loop, taking {1} seconds'.format(
+        print_log('---\nLoop detected, quitting...')
+        print_log('Visited {0} link(s), got a loop, taking {1} seconds'.format(
                         game.link_count,
                         round(time.time() - start_time, 4)))
         return False
 
     except InvalidPageNameError as e:
-        print('---')
-        print(e, file=sys.stderr)
-        print('Visited {0} link(s), got an invalid page name, taking {1} seconds'
-                .format(game.link_count, round(time.time() - start_time, 4)))
+        print_err(e)
+        print_log('---')
+        print_log('Visited {0} link(s), got an invalid page name,'
+                    + ' taking {1} seconds'.format(
+                        game.link_count,
+                        round(time.time() - start_time, 4)))
         return False
 
     except LinkNotFoundError as e:
-        print('---')
-        print(e, file=sys.stderr)
-        print(('Visited {0} link(s), could not find appropriate link'
-                 + ' in last link, taking {1} seconds')
-                .format(game.link_count, round(time.time() - start_time, 4)))
+        print_err(e)
+        print_log('---')
+        print_log(('Visited {0} link(s), could not find appropriate link'
+                 + ' in last link, taking {1} seconds').format(
+                        game.link_count,
+                        round(time.time() - start_time, 4)))
         return False
 
     return True
@@ -69,32 +88,39 @@ def getargs():
 
     return parser.parse_args()
 
-args = getargs()
-args.end = ' '.join(args.end)
+def main():
+    args = getargs()
+    args.end = ' '.join(args.end)
+
+    try:
+        if len(args.page) == 0:
+            game = PhilosophyGame(end=args.end, dont_stop=args.dont_stop)
+        else:
+            page = ' '.join(args.page)
+            game = PhilosophyGame(page=page, end=args.end, dont_stop=args.dont_stop)
+    except ConnectionError as e:
+        print_err('Connection error, please check your connection')
+        sys.exit(1)
+
+    i = 1
+    while True:
+        start_time = time.time()
+        if process(game, start_time):
+            print_log('---')
+            print_log('Took {0} link(s) and {1} seconds'.format(
+                                        game.link_count,
+                                        round(time.time() - start_time, 4)))
+        if i == args.times:
+            break
+        else:
+            # New line for separation
+            print('')
+
+        game = PhilosophyGame(end=args.end, dont_stop=args.dont_stop)
+        i += 1
 
 try:
-    if len(args.page) == 0:
-        game = PhilosophyGame(end=args.end, dont_stop=args.dont_stop)
-    else:
-        page = ' '.join(args.page)
-        game = PhilosophyGame(page=page, end=args.end, dont_stop=args.dont_stop)
-except ConnectionError as e:
-    print('Connection error, please check your connection')
+    main()
+except KeyboardInterrupt:
+    print_err('Script interrupted')
     sys.exit(1)
-
-i = 1
-while True:
-    start_time = time.time()
-    if process(game):
-        print('---')
-        print('Took {0} link(s) and {1} seconds'.format(
-                                    game.link_count,
-                                    round(time.time() - start_time, 4)))
-    if i == args.times:
-        break
-    else:
-        # New line for separation
-        print('')
-
-    game = PhilosophyGame(end=args.end, dont_stop=args.dont_stop)
-    i += 1
