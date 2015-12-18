@@ -57,7 +57,6 @@ import requests
 import urllib
 from requests.exceptions import ConnectionError
 import lxml.html as lh
-import json
 
 class MediaWikiError(Exception):
     """
@@ -82,7 +81,7 @@ class InvalidPageNameError(Exception):
 
 class LinkNotFoundError(Exception):
     """
-    Raised when no appropriate link is found.
+    Raised when no valid link is found
     after parsing.
     """
     pass
@@ -110,8 +109,8 @@ class PhilosophyGame():
                         rnnamespace=0, format='json')
             response = requests.get(self.BASE_URL, params=params,
                                 headers=self.HEADERS)
-            reply = response.content.decode()
-            self.page = json.loads(reply)['query']['random'][0]['title']
+            reply = response.json()
+            self.page = reply['query']['random'][0]['title']
         else:
             self.page = page
 
@@ -200,7 +199,7 @@ class PhilosophyGame():
             requests.exceptions.ConnectionError: if cannot initiate request
             LoopException: if a loop is detected
             InvalidPageNameError: if invalid page name is passed as argument
-            LinkNotFoundError: if an appropraite link cannot be found for
+            LinkNotFoundError: if a valid link cannot be found for
             page
         """
 
@@ -215,20 +214,20 @@ class PhilosophyGame():
 
         response = requests.get(self.BASE_URL, params=params,
                     headers=self.HEADERS)
-        res_json = json.loads(response.content.decode())
+        result = response.json()
 
-        if 'error' in res_json:
+        if 'error' in result:
             raise MediaWikiError('MediaWiki error',
-                {'code': res_json['error']['code'],
-                'info': res_json['error']['info']})
+                {'code': result['error']['code'],
+                'info': result['error']['info']})
 
-        title = res_json['parse']['title'].encode('utf-8')
+        title = result['parse']['title'].encode('utf-8')
         yield title
 
         # This needs to be done AFTER yield title
         if not self.dont_stop and page == self.end:
             return
-        raw_html = res_json['parse']['text']['*'].encode('utf-8')
+        raw_html = result['parse']['text']['*'].encode('utf-8')
         html = lh.fromstring(raw_html)
 
         # This takes care of most MediaWiki templates,
@@ -286,4 +285,4 @@ class PhilosophyGame():
             break
         if not link_found:
             raise LinkNotFoundError(
-                    ('No appropriate link found in page "{0}"').format(page))
+                    ('No valid link found in page "{0}"').format(page))

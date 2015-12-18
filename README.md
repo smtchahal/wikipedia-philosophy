@@ -72,6 +72,16 @@ game = PhilosophyGame(page='Sliced bread', dont_stop=True,
 Note that trace() will always raise exceptions in case a loop is detected
 or if a valid link cannot be found within the page.
 
+## Note
+The module only parses the [lead section](https://en.wikipedia.org/wiki/MOS:LEAD)
+of a page rather than the complete page (parsing just the lead section
+is slow enough as-is). As a result, a valid link cannot be found
+in some pages (e.g. lists) &ndash; in those cases, a `LinkNotFoundError`
+is raised.
+
+In practice, this works for most "normal" articles, i.e. non-lists,
+non-disambiguation pages, etc.
+
 ## Dependencies
 Wikipedia Philosophy Game depends on the following Python libraries.
 * [Requests](http://docs.python-requests.org/)
