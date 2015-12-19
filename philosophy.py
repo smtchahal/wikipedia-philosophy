@@ -107,10 +107,13 @@ class PhilosophyGame():
         if page is None:
             params = dict(action='query', list='random', rnlimit=1,
                         rnnamespace=0, format='json')
-            response = requests.get(self.BASE_URL, params=params,
-                                headers=self.HEADERS)
-            reply = response.json()
-            self.page = reply['query']['random'][0]['title']
+            result = requests.get(self.BASE_URL, params=params,
+                                headers=self.HEADERS).json()
+            if 'error' in result:
+                raise MediaWikiError('MediaWiki error',
+                    {'code': result['error']['code'],
+                    'info': result['error']['info']})
+            self.page = result['query']['random'][0]['title']
         else:
             self.page = page
 
@@ -215,9 +218,8 @@ class PhilosophyGame():
         if not whole_page:
             params['section'] = 0
 
-        response = requests.get(self.BASE_URL, params=params,
-                    headers=self.HEADERS)
-        result = response.json()
+        result = requests.get(self.BASE_URL, params=params,
+                    headers=self.HEADERS).json()
 
         if 'error' in result:
             raise MediaWikiError('MediaWiki error',

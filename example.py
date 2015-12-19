@@ -98,9 +98,12 @@ def main():
         else:
             page = ' '.join(args.page)
             game = PhilosophyGame(page=page, end=args.end, dont_stop=args.dont_stop)
-    except ConnectionError as e:
+    except ConnectionError:
         print_err('Connection error, please check your connection')
         sys.exit(1)
+    except MediaWikiError as e:
+        print_err('MediaWikiError: {0}: {1}'.format(e.errors['code'],
+                            e.errors['info']))
 
     i = 1
     while True:
