@@ -111,8 +111,7 @@ class PhilosophyGame():
                                 headers=self.HEADERS).json()
             if 'error' in result:
                 raise MediaWikiError('MediaWiki error',
-                    {'code': result['error']['code'],
-                    'info': result['error']['info']})
+                    result['error'])
             self.page = result['query']['random'][0]['title']
         else:
             self.page = page
@@ -223,8 +222,7 @@ class PhilosophyGame():
 
         if 'error' in result:
             raise MediaWikiError('MediaWiki error',
-                {'code': result['error']['code'],
-                'info': result['error']['info']})
+                result['error'])
 
         title = result['parse']['title'].encode('utf-8')
 
