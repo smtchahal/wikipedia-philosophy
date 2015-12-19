@@ -21,7 +21,7 @@ The module does the following:
 
 1. Parse the [lead section](https://en.wikipedia.org/wiki/MOS:LEAD)
 of a Wikipedia page with given title as html, raise an appropriate error
-if an error occured while trying to do (`MediaWikiError`,
+if an error occured while trying to do so (`MediaWikiError`,
 `ConnectionError` or `InvalidPageNameError`)
 2. Look for internal links in the main text of the page, ignoring any
 infoboxes, tables, red links, italicised text, links within parentheses,
@@ -61,7 +61,7 @@ except ConnectionError:
     sys.exit('Network error, please check your connection')
 except MediaWikiError as e:
 	# raised when the MediaWiki API returns an error
-    sys.exit('MediaWiki error {1}: {2}'.format(e.errors['code'], e.errors['info']))
+    sys.exit('MediaWiki error {0}: {1}'.format(e.errors['code'], e.errors['info']))
 except LoopException:
 	# raised when a loop is detected
     sys.exit('Loop detected, exiting...')
