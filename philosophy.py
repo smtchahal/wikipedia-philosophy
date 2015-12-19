@@ -182,7 +182,7 @@ class PhilosophyGame():
             and page.find('Category:') == -1
             and page.find('Category talk:') == -1)
 
-    def trace(self, page=None):
+    def trace(self, page=None, whole_page=False):
         """
         Visit the first non-italicized, not-within-parentheses
             link of page recursively until the page self.end
@@ -210,7 +210,10 @@ class PhilosophyGame():
             raise InvalidPageNameError("Invalid page name '{0}'"
                     .format(page))
         params = dict(action='parse', page=page, prop='text',
-                    section=0, format='json', redirects=1)
+                    format='json', redirects=1)
+
+        if not whole_page:
+            params['section'] = 0
 
         response = requests.get(self.BASE_URL, params=params,
                     headers=self.HEADERS)
@@ -222,9 +225,14 @@ class PhilosophyGame():
                 'info': result['error']['info']})
 
         title = result['parse']['title'].encode('utf-8')
-        yield title
+
+        # Don't yield if whole page requested
+        # (which should only be done as a second attempt)
+        if not whole_page:
+            yield title
 
         # This needs to be done AFTER yield title
+        # (The only) normal termination
         if not self.dont_stop and page == self.end:
             return
         raw_html = result['parse']['text']['*'].encode('utf-8')
@@ -284,5 +292,10 @@ class PhilosophyGame():
 
             break
         if not link_found:
-            raise LinkNotFoundError(
-                    ('No valid link found in page "{0}"').format(page))
+            if whole_page:
+                raise LinkNotFoundError(
+                        'No valid link found in page "{0}"'.format(
+                            page.encode('utf-8')))
+            else:
+                for m in self.trace(page, whole_page=True):
+                    yield m

@@ -16,6 +16,27 @@ for more information)
 The Philosophy Game, written in Python, lets you do the clicking
 programmatically.
 
+## How it works
+The module does the following:
+
+1. Parse the [lead section](https://en.wikipedia.org/wiki/MOS:LEAD)
+of a Wikipedia page with given title as html, raise an appropriate error
+if an error occured while trying to do (`MediaWikiError`,
+`ConnectionError` or `InvalidPageNameError`)
+2. Look for internal links in the main text of the page, ignoring any
+infoboxes, tables, red links, italicised text, links within parentheses,
+or links to pages outside of the Wikipedia mainspace.
+3. If any links are found, iterate over the links, and get the first
+link's page name.
+4. If no links are found, parse the whole page again (not just the lead
+section this time)
+5. Repeat steps 2-3. If no link is found this time, raise an appropriate
+error (`LinkNotFoundError`).
+6. Repeat steps 1-5. If the end page is reached (default is "Philosophy;
+see [Advanced options](#advanced-options) below), exit. If a loop is
+encountered (a loop is when two Wikipedia pages link to each other),
+raise an appropriate error (`LoopException`).
+
 ## Basic usage
 
 ```python
@@ -71,16 +92,6 @@ game = PhilosophyGame(page='Sliced bread', dont_stop=True,
 
 Note that trace() will always raise exceptions in case a loop is detected
 or if a valid link cannot be found within the page.
-
-## Note
-The module only parses the [lead section](https://en.wikipedia.org/wiki/MOS:LEAD)
-of a page rather than the complete page (parsing just the lead section
-is slow enough as-is). As a result, a valid link cannot be found
-in some pages (e.g. lists) &ndash; in those cases, a `LinkNotFoundError`
-is raised.
-
-In practice, this works for most "normal" articles, i.e. non-lists,
-non-disambiguation pages, etc.
 
 ## Dependencies
 Wikipedia Philosophy Game depends on the following Python libraries.
