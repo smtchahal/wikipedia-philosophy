@@ -14,12 +14,11 @@ programmatically.
 
 Basic usage:
 
-    >>> from philosophy import *
+    >>> from philosophy import PhilosophyGame
     >>> game = PhilosophyGame('Python (programming language)')
     >>> for s in game.trace():
     ...     print(s)
     ...
-    >>>
 
 Handling errors:
     >>> from philosophy import *
@@ -38,6 +37,7 @@ Handling errors:
     ...     sys.exit(e)
     ... except LinkNotFoundError as e:
     ...     sys.exit(e)
+    ...
 
 Advanced options:
 

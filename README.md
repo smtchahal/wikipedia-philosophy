@@ -40,7 +40,7 @@ raise an appropriate error (`LoopException`).
 ## Basic usage
 
 ```python
-from philosophy import *
+from philosophy import PhilosophyGame
 my_first_wiki_page = 'Python (programming language)'
 game = PhilosophyGame()
 for s in game.trace(my_first_wiki_page):
