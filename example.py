@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
 from philosophy import *
 import sys
 import time
@@ -25,102 +26,99 @@ def print_err(msg):
 def print_log(msg):
     print(bcolors.OKGREEN + msg + bcolors.ENDC)
 
-def process(game, start_time):
+def getargs():
+    parser = argparse.ArgumentParser(description='Play The Philosophy Game')
+    parser.add_argument('start', action='store', type=str,
+        metavar='initial-pagename', nargs='*',
+        help='the initial Wikipedia pagename to start with')
+    parser.add_argument('-e', '--end', action='store', nargs='+',
+        default=['Philosophy'], type=str, metavar='end', dest='end',
+        help='Wikipedia pagename to terminate at (default: \'Philosophy\')')
+    parser.add_argument('-i', '--infinite', action='store_true',
+        help="""don't stop execution until a loop is found or
+            a valid link cannot be found""", dest='infinite')
+    parser.add_argument('-t', '--times', action='store', dest='times',
+        default=1, type=int, metavar='times',
+        help='''run the script this many times, selecting a random
+            page every time except the first (default: 1)
+            (anything less than 1 is infinity)''')
+
+    return parser.parse_args()
+
+def process(names, args, times=1):
+    raised = False
+    start_time = time.time()
     try:
-        for s in game.trace():
-            if s == game.end:
+        link_count = 0
+        for s in names:
+            if s == args.end:
                 print(bcolors.BOLD + s + bcolors.ENDC)
-                return True
-            print(s)
+            else:
+                print(s)
+            link_count += 1
     except ConnectionError:
-        return False
         sys.exit('Network error, please check your connection')
 
     except MediaWikiError as e:
         print_err('Error: {0}: {1}'.format(
                     e.errors['code'],
                     e.errors['info']))
-        return False
+        raised = True
 
     except LoopException:
         print_log('---\nLoop detected, quitting...')
         print_log('Visited {0} link(s), got a loop, taking {1} seconds'.format(
-                        game.link_count,
+                        link_count,
                         round(time.time() - start_time, 4)))
-        return False
+        raised = True
 
     except InvalidPageNameError as e:
         print_err(e)
         print_log('---')
         print_log('Visited {0} link(s), got an invalid page name,'
                     + ' taking {1} seconds'.format(
-                        game.link_count,
+                        link_count,
                         round(time.time() - start_time, 4)))
-        return False
+        raised = True
 
     except LinkNotFoundError as e:
         print_err(e)
         print_log('---')
         print_log(('Visited {0} link(s), could not find appropriate link'
                  + ' in last link, taking {1} seconds').format(
-                        game.link_count,
+                        link_count,
                         round(time.time() - start_time, 4)))
-        return False
+        raised = True
 
-    return True
+    if not raised:
+        print_log('---')
+        print_log('Took {0} link(s) and {1} seconds'.format(
+                        link_count,
+                        round(time.time() - start_time, 4)))
 
-def getargs():
-    parser = argparse.ArgumentParser(description='Play The Philosophy Game')
-    parser.add_argument('page', action='store', type=str,
-        metavar='initial-pagename', nargs='*',
-        help='the initial Wikipedia pagename to start with')
-    parser.add_argument('-e', '--end', action='store',
-        default=['Philosophy'], type=str, metavar='end', dest='end',
-        nargs='+',
-        help='Wikipedia pagename to terminate at (default: \'Philosophy\')')
-    parser.add_argument('-d', '--dont-stop', action='store_true',
-        help="""don't stop execution until a loop is found or
-            a valid link cannot be found""", dest='dont_stop')
-    parser.add_argument('-t', '--times', action='store', dest='times',
-        default=1, type=int, metavar='times',
-        help='''run the script this many times (default: 1)
-            (anything less than 1 is infinity)''')
+    if times == args.times:
+        return
 
-    return parser.parse_args()
+    # New line for separation
+    print('')
+
+    names = philosophy_game(end=args.end, infinite=args.infinite)
+    process(names, args, times=times+1)
 
 def main():
     args = getargs()
+    args.start = ' '.join(args.start)
     args.end = ' '.join(args.end)
 
-    try:
-        if len(args.page) == 0:
-            game = PhilosophyGame(end=args.end, dont_stop=args.dont_stop)
-        else:
-            page = ' '.join(args.page)
-            game = PhilosophyGame(page=page, end=args.end, dont_stop=args.dont_stop)
-    except ConnectionError:
-        print_err('Connection error, please check your connection')
-        sys.exit(1)
-    except MediaWikiError as e:
-        print_err('MediaWikiError: {0}: {1}'.format(e.errors['code'],
-                            e.errors['info']))
+    if args.start == '':
+        args.start = None
+    if args.end == '':
+        args.end = 'Philosophy'
 
-    i = 1
-    while True:
-        start_time = time.time()
-        if process(game, start_time):
-            print_log('---')
-            print_log('Took {0} link(s) and {1} seconds'.format(
-                                        game.link_count,
-                                        round(time.time() - start_time, 4)))
-        if i == args.times:
-            break
-        else:
-            # New line for separation
-            print('')
-
-        game = PhilosophyGame(end=args.end, dont_stop=args.dont_stop)
-        i += 1
+    names = philosophy_game(page=args.start,
+            end=args.end,
+            infinite=args.infinite)
+    process(names, args)
 
 try:
     main()

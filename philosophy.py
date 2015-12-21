@@ -14,18 +14,14 @@ programmatically.
 
 Basic usage:
 
-    >>> from philosophy import PhilosophyGame
-    >>> game = PhilosophyGame('Python (programming language)')
-    >>> for s in game.trace():
-    ...     print(s)
-    ...
+    >>> from philosophy import philosophy_game
+    >>> for page in philosophy_game():
+    ...     print(page)
 
 Handling errors:
     >>> from philosophy import *
-    >>> game = PhilosophyGame('Python (programming language)')
     >>> try:
-    ...     for s in game.trace():
-    ...         print(s)
+    ...     print(list(philosophy_game())
     ... except ConnectionError:
     ...     sys.exit('Network error, please check your connection')
     ... except MediaWikiError as e:
@@ -43,13 +39,13 @@ Advanced options:
 
 In this example, we set `end` to 'Multicellular organism', so that
 instead of stopping at 'Philosophy', trace() stops there.
-    >>> game = PhilosophyGame(page='Sandwich', end='Multicellular organism'):
+    >>> print(list(page='Sandwich', end='Multicellular organism')):
 
-In the following example, we set `dont_stop` to True, so that
+In the following example, we set `infinite` to True, so that
 trace() disregards the value of `end` and doesn't stop.
-    >>> game = PhilosophyGame(page='Sliced bread', dont_stop=True)
+    >>> print(list(philosophy_game(page='Sliced bread', infinite=True)))
 
-Note that trace() will always raise exceptions in case a loop
+Note that `philosophy_game()` will always raise exceptions in case a loop
 is detected or if valid link cannot be found within the page.
 """
 
@@ -57,6 +53,65 @@ import requests
 import urllib
 from requests.exceptions import ConnectionError
 import lxml.html as lh
+
+def valid_page_name(page):
+    """
+    Checks for valid mainspace Wikipedia page name
+    """
+    NON_MAINSPACE = [ 'File:',
+                        'File talk:',
+                        'Wikipedia:',
+                        'Wikipedia talk:',
+                        'Project:',
+                        'Project talk:',
+                        'Portal:',
+                        'Portal talk:',
+                        'Special:',
+                        'Help:',
+                        'Help talk:',
+                        'Template:',
+                        'Template talk:',
+                        'Talk:',
+                        'Category:',
+                        'Category talk:' ]
+    return all(non_main not in page for non_main in NON_MAINSPACE)
+
+def strip_parentheses(string):
+    """
+    Remove parentheses from a string, leaving
+    parentheses between <tags> in place
+
+    Args:
+        string: the string to remove parentheses from
+    Returns:
+        the processed string after removal of parentheses
+    """
+    p = a = 0
+    result = ''
+    for c in string:
+        # When outside of parentheses within <tags>
+        if p < 1:
+            if c == '<':
+                a += 1
+            if c == '>':
+                a -= 1
+
+        # When outside of <tags>
+        if a < 1:
+            if c == '(':
+                p += 1
+            if p > 0:
+                result += ' '
+            else:
+                result += c
+            if c == ')':
+                p -= 1
+
+        # When inside of <tags>
+        else:
+            result +=c
+
+    return result
 
 class MediaWikiError(Exception):
     """
@@ -75,7 +130,7 @@ class LoopException(Exception):
 class InvalidPageNameError(Exception):
     """
     Raised when an invalid page name is
-    passed to self.trace().
+    passed to trace().
     """
     pass
 
@@ -86,216 +141,145 @@ class LinkNotFoundError(Exception):
     """
     pass
 
-class PhilosophyGame():
+def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=False, visited=[]):
     """
-    The main PhilosophyGame class.
+    Visit the first non-italicized, not-within-parentheses
+        link of page recursively until the page end
+        (default: 'Philosophy') is reached.
+
+    Args:
+        page: The Wikipedia page name to page with
+        (default: a random page)
+        end: The Wikipedia page name to end at
+        (default: 'Philosophy')
+        whole_page: Parse the whole parse rather than just
+        the lead section (default: False)
+        infinite: Only stop execution when either a loop is encountered
+        or no valid link could be found
+    Returns:
+        A generator with the page names generated in sequence
+        in real time (including page and end).
+    Raises:
+        MediaWikiError: if MediaWiki API responds with an error
+        requests.exceptions.ConnectionError: if cannot initiate request
+        LoopException: if a loop is detected
+        InvalidPageNameError: if invalid page name is passed as argument
+        LinkNotFoundError: if a valid link cannot be found for
+        page
     """
     BASE_URL = 'https://en.wikipedia.org/w/api.php'
-    HEADERS = { 'User-Agent': 'The Philosophy Game/0.1' }
-    def __init__(self, page=None, end='Philosophy', dont_stop=False):
-        """
-        Initialize object with initial page name to start with.
-
-        Args:
-            page: the initial page name to start with. (optional,
-            defaults to a random page)
-
-        Raises:
-            InvalidPageNameError: if page is not a valid mainspace
-            page name
-        """
-        if page is None:
-            params = dict(action='query', list='random', rnlimit=1,
-                        rnnamespace=0, format='json')
-            result = requests.get(self.BASE_URL, params=params,
-                                headers=self.HEADERS).json()
-            if 'error' in result:
-                raise MediaWikiError('MediaWiki error',
-                    result['error'])
-            self.page = result['query']['random'][0]['title']
-        else:
-            self.page = page
-
-        if not PhilosophyGame.valid_page_name(self.page):
-            raise InvalidPageNameError("Invalid page name '{0}'"
-                                        .format(self.page))
-        self.link_count = 0
-        self.visited = []
-        self.end = end
-        self.dont_stop = dont_stop
-
-    @staticmethod
-    def strip_parentheses(string):
-        """
-        Remove parentheses from a string, leaving
-        parentheses between <tags> in place
-
-        Args:
-            string: the string to remove parentheses from
-        Returns:
-            the processed string after removal of parentheses
-        """
-        p = a = 0
-        result = ''
-        for c in string:
-            # When outside of parentheses within <tags>
-            if p < 1:
-                if c == '<':
-                    a += 1
-                if c == '>':
-                    a -= 1
-
-            # When outside of <tags>
-            if a < 1:
-                if c == '(':
-                    p += 1
-                if p > 0:
-                    result += ' '
-                else:
-                    result += c
-                if c == ')':
-                    p -= 1
-
-            # When inside of <tags>
-            else:
-                result +=c
-
-        return result
-
-    @staticmethod
-    def valid_page_name(page):
-        """
-        Checks for valid mainspace Wikipedia page name
-        """
-        return (page.find('File:') == -1
-            and page.find('File talk') == -1
-            and page.find('Wikipedia:') == -1
-            and page.find('Wikipedia talk:') == -1
-            and page.find('Project:') == -1
-            and page.find('Project talk:') == -1
-            and page.find('Portal:') == -1
-            and page.find('Portal talk:') == -1
-            and page.find('Special:') == -1
-            and page.find('Help:') == -1
-            and page.find('Help talk:') == -1
-            and page.find('Template:') == -1
-            and page.find('Template talk:') == -1
-            and page.find('Talk:') == -1
-            and page.find('Category:') == -1
-            and page.find('Category talk:') == -1)
-
-    def trace(self, page=None, whole_page=False):
-        """
-        Visit the first non-italicized, not-within-parentheses
-            link of page recursively until the page self.end
-            (default: 'Philosophy') is reached.
-
-        Args:
-            page: The Wikipedia page name to start with
-            (optional, defaults to self.page)
-        Returns:
-            A generator with the page names generated in sequence
-            in real time (including self.end).
-        Raises:
-            MediaWikiError: if MediaWiki API responds with an error
-            requests.exceptions.ConnectionError: if cannot initiate request
-            LoopException: if a loop is detected
-            InvalidPageNameError: if invalid page name is passed as argument
-            LinkNotFoundError: if a valid link cannot be found for
-            page
-        """
-
-        if page is None:
-            page = self.page
-
-        if not PhilosophyGame.valid_page_name(page):
-            raise InvalidPageNameError("Invalid page name '{0}'"
-                    .format(page))
-        params = dict(action='parse', page=page, prop='text',
-                    format='json', redirects=1)
-
-        if not whole_page:
-            params['section'] = 0
-
-        result = requests.get(self.BASE_URL, params=params,
-                    headers=self.HEADERS).json()
-
+    HEADERS = { 'User-Agent': 'The Philosophy Game/0.1',
+                'Accept-Encoding': 'gzip'}
+    if page is None:
+        params = dict(action='query', list='random', rnlimit=1,
+                    rnnamespace=0, format='json')
+        result = requests.get(BASE_URL, params=params,
+                            headers=HEADERS).json()
         if 'error' in result:
+            del visited[:]
             raise MediaWikiError('MediaWiki error',
                 result['error'])
+        page = result['query']['random'][0]['title']
 
-        title = result['parse']['title'].encode('utf-8')
+    if not valid_page_name(page):
+        del visited[:]
+        raise InvalidPageNameError("Invalid page name '{0}'"
+                                    .format(page))
+    link_count = 0
 
-        # Don't yield if whole page requested
-        # (which should only be done as a second attempt)
-        if not whole_page:
-            yield title
+    if not valid_page_name(page):
+        del visited[:]
+        raise InvalidPageNameError("Invalid page name '{0}'"
+                .format(page))
+    params = dict(action='parse', page=page, prop='text',
+                format='json', redirects=1)
 
-        # This needs to be done AFTER yield title
-        # (The only) normal termination
-        if not self.dont_stop and page == self.end:
-            return
-        raw_html = result['parse']['text']['*'].encode('utf-8')
-        html = lh.fromstring(raw_html)
+    if not whole_page:
+        params['section'] = 0
 
-        # This takes care of most MediaWiki templates,
-        # images, red links, hatnotes, italicized text
-        # and anything that's strictly not text-only
-        for elm in html.cssselect('.reference,span,div,.thumb,'
-                                + 'table,a.new,i,#coordinates'):
-            elm.drop_tree()
+    result = requests.get(BASE_URL, params=params,
+                headers=HEADERS).json()
 
-        html = lh.fromstring(PhilosophyGame.strip_parentheses(
-                            lh.tostring(html)))
-        link_found = False
-        for elm, attr, link, pos in html.iterlinks():
-            # Because .iterlinks() picks up 'src' and the like too
-            if attr != 'href':
-                continue
-            next_page = link
+    if 'error' in result:
+        del visited[:]
+        raise MediaWikiError('MediaWiki error',
+            result['error'])
 
-            # Must be a valid internal wikilink
-            if next_page[:len('/wiki/')] != '/wiki/':
-                continue
+    title = result['parse']['title'].encode('utf-8')
 
-            # Extract the Wikipedia page name
-            next_page = next_page[len('/wiki/'):]
+    # Don't yield if whole page requested
+    # (which should only be done as a second attempt)
+    if not whole_page:
+        yield title
 
-            # Decode escaped characters
-            next_page = urllib.unquote(next_page)
+    # This needs to be done AFTER yield title
+    # (The only) normal termination
+    if not infinite and page == end:
+        del visited[:]
+        return
+    raw_html = result['parse']['text']['*'].encode('utf-8')
+    html = lh.fromstring(raw_html)
 
-            # Skip non-valid names
-            if not PhilosophyGame.valid_page_name(next_page):
-                continue
+    # This takes care of most MediaWiki templates,
+    # images, red links, hatnotes, italicized text
+    # and anything that's strictly not text-only
+    for elm in html.cssselect('.reference,span,div,.thumb,'
+                            + 'table,a.new,i,#coordinates'):
+        elm.drop_tree()
 
-            # Links use an underscore ('_')
-            # instead of a space (' '), this
-            # fixes that
-            next_page = next_page.replace('_', ' ')
+    html = lh.fromstring(strip_parentheses(lh.tostring(html)))
+    link_found = False
+    for elm, attr, link, pos in html.iterlinks():
+        # Because .iterlinks() picks up 'src' and the like too
+        if attr != 'href':
+            continue
+        next_page = link
 
-            # Eliminate named anchor, if any
-            pos = next_page.find('#')
-            if pos != -1:
-                next_page = next_page[:pos]
+        # Must be a valid internal wikilink
+        if not next_page.startswith('/wiki/'):
+            continue
 
-            # Detect loop
-            if next_page in self.visited:
-                raise LoopException('Loop detected')
+        # Extract the Wikipedia page name
+        next_page = next_page[len('/wiki/'):]
 
-            link_found = True
-            self.link_count += 1
-            self.visited.append(page)
+        # Decode escaped characters
+        next_page = urllib.unquote(next_page)
 
-            # Recursively yield
-            for m in self.trace(next_page):
+        # Skip non-valid names
+        if not valid_page_name(next_page):
+            continue
+
+        # Links use an underscore ('_')
+        # instead of a space (' '), this
+        # fixes that
+        next_page = next_page.replace('_', ' ')
+
+        # Eliminate named anchor, if any
+        pos = next_page.find('#')
+        if pos != -1:
+            next_page = next_page[:pos]
+
+        # Detect loop
+        if next_page in visited:
+            del visited[:]
+            raise LoopException('Loop detected')
+
+        link_found = True
+        link_count += 1
+        visited.append(page)
+
+        for m in philosophy_game(page=next_page, end=end, visited=visited):
+            yield m
+
+        break
+    if not link_found:
+        if whole_page:
+            del visited[:]
+            raise LinkNotFoundError(
+                    'No valid link found in page "{0}"'.format(
+                        page.encode('utf-8')))
+        else:
+            for m in philosophy_game(page=page,
+                    whole_page=True, end=end,
+                    visited=visited):
                 yield m
-
-            break
-        if not link_found:
-            if whole_page:
-                raise LinkNotFoundError(
-                        'No valid link found in page "{0}"'.format(
-                            page.encode('utf-8')))
-            else:
-                for m in self.trace(page, whole_page=True):
-                    yield m

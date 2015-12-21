@@ -40,10 +40,8 @@ raise an appropriate error (`LoopException`).
 ## Basic usage
 
 ```python
-from philosophy import PhilosophyGame
-my_first_wiki_page = 'Python (programming language)'
-game = PhilosophyGame()
-for s in game.trace(my_first_wiki_page):
+from philosophy import philosophy_game
+for s in philosophy_game():
     print(s)
 ```
 
@@ -52,9 +50,8 @@ for s in game.trace(my_first_wiki_page):
 ```python
 from philosophy import *
 my_first_wiki_page = 'Python (programming language)'
-game = PhilosophyGame()
 try:
-    for s in game.trace(my_first_wiki_page):
+    for s in philosophy_game(my_first_wiki_page):
         print(s)
 except ConnectionError:
 	# raised when unable to connect to 'https://en.wikipedia.org/w/api.php'
@@ -66,7 +63,7 @@ except LoopException:
 	# raised when a loop is detected
     sys.exit('Loop detected, exiting...')
 except InvalidPageNameError as e:
-	# raised when an invalid pagename is passed to trace()
+	# raised when an invalid pagename is passed to philosophy_game()
     sys.exit(e)
 except LinkNotFoundError as e:
 	# raised when no valid link could be found in the article
@@ -76,21 +73,21 @@ except LinkNotFoundError as e:
 ## Advanced options
 
 In this example, we set `end` to 'Multicellular organism', so that
-instead of stopping at 'Philosophy', trace() stops there.
+instead of stopping at 'Philosophy', philosophy_game() stops there.
 
 ```python
-game = PhilosophyGame(page='Sandwich', end='Multicellular organism')
+print(list(philosophy_game(page='Sandwich', end='Multicellular organism')))
 ```
 
-In the following example, we set `dont_stop` to `True`, so that
-trace() disregards the value of `end` and doesn't stop.
+In the following example, we set `infinite` to `True`, so that
+philosophy_game() disregards the value of `end` and doesn't stop.
 
 ```python
-game = PhilosophyGame(page='Sliced bread', dont_stop=True,
-				end="Doesn't matter")
+print(list(philosophy_game(page='Sliced bread', infinite=True,
+				end="Doesn't matter")))
 ```
 
-Note that trace() will always raise exceptions in case a loop is detected
+Note that philosophy_game() will always raise exceptions in case a loop is detected
 or if a valid link cannot be found within the page.
 
 ## Dependencies
@@ -148,7 +145,7 @@ In this example, we start with "Sandwich" and set the `end` parameter to
 The following version only stops when loops are detected or when a
 valid link cannot be found, ignoring the value of the `end` parameter.
 ```
-$ ./example.py --dont-stop --end "Doesn't matter"
+$ ./example.py --infinite --end "Doesn't matter"
 Shpolskii matrix
 Phonon
 Physics
@@ -170,7 +167,7 @@ Visited 12 link(s), got a loop, taking 28.1101 seconds
 You can always view help for the script using the `--help` (or `-h`)
 parameter.
 ```
-usage: example.py [-h] [-e end [end ...]] [-d] [-t times]
+usage: example.py [-h] [-e end [end ...]] [-i] [-t times]
                   [initial-pagename [initial-pagename ...]]
 
 Play The Philosophy Game
@@ -183,7 +180,7 @@ optional arguments:
   -e end [end ...], --end end [end ...]
                         Wikipedia pagename to terminate at (default:
                         'Philosophy')
-  -d, --dont-stop       don't stop execution until a loop is found or a valid
+  -i, --infinite        don't stop execution until a loop is found or a valid
                         link cannot be found
   -t times, --times times
                         run the script this many times (default: 1) (anything
