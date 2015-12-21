@@ -65,8 +65,8 @@ def process(names, args, times=1):
                     e.errors['info']))
         raised = True
 
-    except LoopException:
-        print_log('---\nLoop detected, quitting...')
+    except LoopException as e:
+        print_log('---\n{0}, quitting...'.format(e))
         print_log('Visited {0} link(s), got a loop, taking {1} seconds'.format(
                         link_count,
                         round(time.time() - start_time, 4)))

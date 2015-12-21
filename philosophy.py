@@ -205,18 +205,26 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
         raise MediaWikiError('MediaWiki error',
             result['error'])
 
-    title = result['parse']['title'].encode('utf-8')
+    page = result['parse']['title'].encode('utf-8')
+
+    # Detect loop
+    if page in visited:
+        last_page = visited[-1]
+        del visited[:]
+        raise LoopException('Loop detected between "{0}" and "{1}"'
+                        .format(last_page, page))
 
     # Don't yield if whole page requested
     # (which should only be done as a second attempt)
     if not whole_page:
-        yield title
+        yield page
 
     # This needs to be done AFTER yield title
     # (The only) normal termination
     if not infinite and page == end:
         del visited[:]
         return
+
     raw_html = result['parse']['text']['*'].encode('utf-8')
     html = lh.fromstring(raw_html)
 
@@ -258,11 +266,6 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
         pos = next_page.find('#')
         if pos != -1:
             next_page = next_page[:pos]
-
-        # Detect loop
-        if next_page in visited:
-            del visited[:]
-            raise LoopException('Loop detected')
 
         link_found = True
         link_count += 1
