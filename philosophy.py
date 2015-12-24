@@ -25,7 +25,7 @@ Handling errors:
     ... except ConnectionError:
     ...     sys.exit('Network error, please check your connection')
     ... except MediaWikiError as e:
-    ...     sys.exit('MediaWiki API error {1}: {2}'.format(e.errors['code'],
+    ...     sys.exit('MediaWiki API error {0}: {1}'.format(e.errors['code'],
     ...                                                e.errors['info']))
     ... except LoopException:
     ...     sys.exit('Loop detected, exiting...')
@@ -205,7 +205,7 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
         raise MediaWikiError('MediaWiki error',
             result['error'])
 
-    page = result['parse']['title'].encode('utf-8')
+    page = result['parse']['title']
 
     # Detect loop
     if page in visited:
@@ -225,14 +225,14 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
         del visited[:]
         return
 
-    raw_html = result['parse']['text']['*'].encode('utf-8')
+    raw_html = result['parse']['text']['*']
     html = lh.fromstring(raw_html)
 
     # This takes care of most MediaWiki templates,
     # images, red links, hatnotes, italicized text
     # and anything that's strictly not text-only
     for elm in html.cssselect('.reference,span,div,.thumb,'
-                            + 'table,a.new,i,#coordinates'):
+                            'table,a.new,i,#coordinates'):
         elm.drop_tree()
 
     html = lh.fromstring(strip_parentheses(lh.tostring(html)))
@@ -280,7 +280,7 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
             del visited[:]
             raise LinkNotFoundError(
                     'No valid link found in page "{0}"'.format(
-                        page.encode('utf-8')))
+                        page))
         else:
             for m in philosophy_game(page=page,
                     whole_page=True, end=end,
