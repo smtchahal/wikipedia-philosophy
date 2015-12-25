@@ -40,18 +40,19 @@ raise an appropriate error (`LoopException`).
 ## Basic usage
 
 ```python
-from philosophy import philosophy_game
-for s in philosophy_game():
+import philosophy
+for s in philosophy.trace():
     print(s)
 ```
 
 ## Handling errors
 
 ```python
-from philosophy import *
+import philosophy
+from philosophy.exceptions import *
 my_first_wiki_page = 'Python (programming language)'
 try:
-    for s in philosophy_game(my_first_wiki_page):
+    for s in philosophy.trace(my_first_wiki_page):
         print(s)
 except ConnectionError:
 	# raised when unable to connect to 'https://en.wikipedia.org/w/api.php'
@@ -63,7 +64,7 @@ except LoopException:
 	# raised when a loop is detected
     sys.exit('Loop detected, exiting...')
 except InvalidPageNameError as e:
-	# raised when an invalid pagename is passed to philosophy_game()
+	# raised when an invalid pagename is passed to trace()
     sys.exit(e)
 except LinkNotFoundError as e:
 	# raised when no valid link could be found in the article
@@ -73,25 +74,25 @@ except LinkNotFoundError as e:
 ## Advanced options
 
 In this example, we set `end` to 'Multicellular organism', so that
-instead of stopping at 'Philosophy', philosophy_game() stops there.
+instead of stopping at 'Philosophy', `trace()` stops there.
 
 ```python
-print(list(philosophy_game(page='Sandwich', end='Multicellular organism')))
+print(list(philosophy.trace(page='Sandwich', end='Multicellular organism')))
 ```
 
 In the following example, we set `infinite` to `True`, so that
-philosophy_game() disregards the value of `end` and doesn't stop.
+`trace()` disregards the value of `end` and doesn't stop.
 
 ```python
-print(list(philosophy_game(page='Sliced bread', infinite=True,
+print(list(philosophy.trace(page='Sliced bread', infinite=True,
 				end="Doesn't matter")))
 ```
 
-Note that philosophy_game() will always raise exceptions in case a loop is detected
+Note that `trace()` will always raise exceptions in case a loop is detected
 or if a valid link cannot be found within the page.
 
 ## Dependencies
-Wikipedia Philosophy Game depends on the following Python libraries.
+The module depends on the following Python libraries.
 * [Requests](http://docs.python-requests.org/)
 * [lxml](http://lxml.de/)
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-from philosophy import *
+import philosophy
+from philosophy.exceptions import *
 import sys
 import time
 import argparse
@@ -102,7 +103,7 @@ def process(names, args, times=1):
     # New line for separation
     print('')
 
-    names = philosophy_game(end=args.end, infinite=args.infinite)
+    names = philosophy.trace(end=args.end, infinite=args.infinite)
     process(names, args, times=times+1)
 
 def main():
@@ -115,7 +116,7 @@ def main():
     if args.end == '':
         args.end = 'Philosophy'
 
-    names = philosophy_game(page=args.start,
+    names = philosophy.trace(page=args.start,
             end=args.end,
             infinite=args.infinite)
     process(names, args)

@@ -14,44 +14,46 @@ programmatically.
 
 Basic usage:
 
-    >>> from philosophy import philosophy_game
-    >>> for page in philosophy_game():
+    >>> import philosophy
+    >>> for page in philosophy.trace():
     ...     print(page)
 
 Handling errors:
-    >>> from philosophy import *
+    >>> import philosophy
+    >>> from philosophy.exceptions import *
     >>> try:
-    ...     print(list(philosophy_game())
-    ... except ConnectionError:
+    ...     for page in philosophy.trace():
+    ...         print(page)
+    ... except philosophy.ConnectionError:
     ...     sys.exit('Network error, please check your connection')
-    ... except MediaWikiError as e:
+    ... except philosophy.MediaWikiError as e:
     ...     sys.exit('MediaWiki API error {0}: {1}'.format(e.errors['code'],
     ...                                                e.errors['info']))
-    ... except LoopException:
+    ... except philosophy.LoopException:
     ...     sys.exit('Loop detected, exiting...')
-    ... except InvalidPageNameError as e:
+    ... except philosophy.InvalidPageNameError as e:
     ...     sys.exit(e)
-    ... except LinkNotFoundError as e:
+    ... except philosophy.LinkNotFoundError as e:
     ...     sys.exit(e)
-    ...
 
 Advanced options:
 
 In this example, we set `end` to 'Multicellular organism', so that
 instead of stopping at 'Philosophy', trace() stops there.
-    >>> print(list(page='Sandwich', end='Multicellular organism')):
+    >>> print(list(philosophy.trace(page='Sandwich', end='Multicellular'
+    ... 'organism')))
 
 In the following example, we set `infinite` to True, so that
 trace() disregards the value of `end` and doesn't stop.
-    >>> print(list(philosophy_game(page='Sliced bread', infinite=True)))
+    >>> print(list(philosophy.trace(page='Sliced bread', infinite=True)))
 
-Note that `philosophy_game()` will always raise exceptions in case a loop
+Note that `trace()` will always raise exceptions in case a loop
 is detected or if valid link cannot be found within the page.
 """
 
 import requests
 import urllib
-from requests.exceptions import ConnectionError
+from philosophy.exceptions import *
 import lxml.html as lh
 
 def valid_page_name(page):
@@ -113,35 +115,7 @@ def strip_parentheses(string):
 
     return result
 
-class MediaWikiError(Exception):
-    """
-    Raised when the MediaWiki API returns an error.
-    """
-    def __init__(self, message, errors):
-        super(MediaWikiError, self).__init__(message)
-        self.errors = errors
-
-class LoopException(Exception):
-    """
-    Raised when a loop is detected.
-    """
-    pass
-
-class InvalidPageNameError(Exception):
-    """
-    Raised when an invalid page name is
-    passed to trace().
-    """
-    pass
-
-class LinkNotFoundError(Exception):
-    """
-    Raised when no valid link is found
-    after parsing.
-    """
-    pass
-
-def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=False, visited=[]):
+def trace(page=None, end='Philosophy', whole_page=False, infinite=False, visited=[]):
     """
     Visit the first non-italicized, not-within-parentheses
         link of page recursively until the page end
@@ -271,7 +245,7 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
         link_count += 1
         visited.append(page)
 
-        for m in philosophy_game(page=next_page, end=end, visited=visited):
+        for m in trace(page=next_page, end=end, visited=visited):
             yield m
 
         break
@@ -282,7 +256,7 @@ def philosophy_game(page=None, end='Philosophy', whole_page=False, infinite=Fals
                     'No valid link found in page "{0}"'.format(
                         page))
         else:
-            for m in philosophy_game(page=page,
+            for m in trace(page=page,
                     whole_page=True, end=end,
                     visited=visited):
                 yield m
