@@ -76,7 +76,7 @@ def valid_page_name(page):
                         'Talk:',
                         'Category:',
                         'Category talk:' ]
-    return all(non_main not in page for non_main in NON_MAINSPACE)
+    return all(not page.startswith(non_main) for non_main in NON_MAINSPACE)
 
 def strip_parentheses(string):
     """
