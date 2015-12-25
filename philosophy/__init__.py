@@ -24,16 +24,16 @@ Handling errors:
     >>> try:
     ...     for page in philosophy.trace():
     ...         print(page)
-    ... except philosophy.ConnectionError:
+    ... except ConnectionError:
     ...     sys.exit('Network error, please check your connection')
-    ... except philosophy.MediaWikiError as e:
+    ... except MediaWikiError as e:
     ...     sys.exit('MediaWiki API error {0}: {1}'.format(e.errors['code'],
     ...                                                e.errors['info']))
-    ... except philosophy.LoopException:
+    ... except LoopException:
     ...     sys.exit('Loop detected, exiting...')
-    ... except philosophy.InvalidPageNameError as e:
+    ... except InvalidPageNameError as e:
     ...     sys.exit(e)
-    ... except philosophy.LinkNotFoundError as e:
+    ... except LinkNotFoundError as e:
     ...     sys.exit(e)
 
 Advanced options:
