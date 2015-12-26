@@ -53,12 +53,18 @@ is detected or if valid link cannot be found within the page.
 
 import requests
 import urllib
-from philosophy.exceptions import *
+from .exceptions import *
 import lxml.html as lh
 
 def valid_page_name(page):
     """
     Checks for valid mainspace Wikipedia page name
+
+    Args:
+        page: The page name to validate
+
+    Returns:
+        True if `page` is valid, False otherwise
     """
     NON_MAINSPACE = [ 'File:',
                         'File talk:',
@@ -80,113 +86,123 @@ def valid_page_name(page):
 
 def strip_parentheses(string):
     """
-    Remove parentheses from a string, leaving
+    Remove parentheses from nesting_level string, leaving
     parentheses between <tags> in place
 
     Args:
         string: the string to remove parentheses from
+
     Returns:
         the processed string after removal of parentheses
     """
-    p = a = 0
+    nested_parentheses = nesting_level = 0
     result = ''
     for c in string:
         # When outside of parentheses within <tags>
-        if p < 1:
+        if nested_parentheses < 1:
             if c == '<':
-                a += 1
+                nesting_level += 1
             if c == '>':
-                a -= 1
+                nesting_level -= 1
 
         # When outside of <tags>
-        if a < 1:
+        if nesting_level < 1:
             if c == '(':
-                p += 1
-            if p > 0:
+                nested_parentheses += 1
+            if nested_parentheses > 0:
                 result += ' '
             else:
                 result += c
             if c == ')':
-                p -= 1
+                nested_parentheses -= 1
 
         # When inside of <tags>
         else:
-            result +=c
+            result += c
 
     return result
 
-def trace(page=None, end='Philosophy', whole_page=False, infinite=False, visited=[]):
+# Used to store pages that have been visited in order to detect loops
+# Deleted every time trace() exits (regardless of how)
+visited = []
+
+def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
     """
     Visit the first non-italicized, not-within-parentheses
         link of page recursively until the page end
         (default: 'Philosophy') is reached.
 
     Args:
-        page: The Wikipedia page name to page with
-        (default: a random page)
-        end: The Wikipedia page name to end at
-        (default: 'Philosophy')
+        page: The Wikipedia page name to page with (default: a random page)
+
+        end: The Wikipedia page name to end at (default: 'Philosophy')
+
         whole_page: Parse the whole parse rather than just
         the lead section (default: False)
+
         infinite: Only stop execution when either a loop is encountered
         or no valid link could be found
+
     Returns:
         A generator with the page names generated in sequence
         in real time (including page and end).
+
     Raises:
         MediaWikiError: if MediaWiki API responds with an error
-        requests.exceptions.ConnectionError: if cannot initiate request
+
+        ConnectionError: if cannot initiate request
+
         LoopException: if a loop is detected
+
         InvalidPageNameError: if invalid page name is passed as argument
-        LinkNotFoundError: if a valid link cannot be found for
-        page
+
+        LinkNotFoundError: if a valid link cannot be found for page
     """
     BASE_URL = 'https://en.wikipedia.org/w/api.php'
     HEADERS = { 'User-Agent': 'The Philosophy Game/0.1',
-                'Accept-Encoding': 'gzip'}
+                'Accept-Encoding': 'gzip' }
     if page is None:
-        params = dict(action='query', list='random', rnlimit=1,
-                    rnnamespace=0, format='json')
-        result = requests.get(BASE_URL, params=params,
-                            headers=HEADERS).json()
+        params = {
+            'action': 'query',
+            'list': 'random',
+            'rnlimit': 1,
+            'rnnamespace': 0,
+            'format': 'json'
+        }
+        result = requests.get(BASE_URL, params=params, headers=HEADERS).json()
         if 'error' in result:
             del visited[:]
-            raise MediaWikiError('MediaWiki error',
-                result['error'])
+            raise MediaWikiError('MediaWiki error', result['error'])
+
         page = result['query']['random'][0]['title']
 
     if not valid_page_name(page):
         del visited[:]
-        raise InvalidPageNameError("Invalid page name '{0}'"
-                                    .format(page))
-    link_count = 0
+        raise InvalidPageNameError("Invalid page name '{0}'".format(page))
 
-    if not valid_page_name(page):
-        del visited[:]
-        raise InvalidPageNameError("Invalid page name '{0}'"
-                .format(page))
-    params = dict(action='parse', page=page, prop='text',
-                format='json', redirects=1)
+    params = {
+        'action': 'parse',
+        'page': page,
+        'prop': 'text',
+        'format': 'json',
+        'redirects': 1
+    }
 
     if not whole_page:
         params['section'] = 0
 
-    result = requests.get(BASE_URL, params=params,
-                headers=HEADERS).json()
+    result = requests.get(BASE_URL, params=params, headers=HEADERS).json()
 
     if 'error' in result:
         del visited[:]
-        raise MediaWikiError('MediaWiki error',
-            result['error'])
+        raise MediaWikiError('MediaWiki error', result['error'])
 
     page = result['parse']['title']
 
     # Detect loop
     if page in visited:
-        last_page = visited[-1]
         del visited[:]
-        raise LoopException('Loop detected between "{0}" and "{1}"'
-                        .format(last_page, page))
+        raise LoopException('Loop detected')
 
     # Don't yield if whole page requested
     # (which should only be done as a second attempt)
@@ -217,17 +233,12 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False, visited
             continue
         next_page = link
 
-        # Must be a valid internal wikilink
         if not next_page.startswith('/wiki/'):
             continue
 
-        # Extract the Wikipedia page name
         next_page = next_page[len('/wiki/'):]
-
-        # Decode escaped characters
         next_page = urllib.unquote(next_page)
 
-        # Skip non-valid names
         if not valid_page_name(next_page):
             continue
 
@@ -242,21 +253,19 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False, visited
             next_page = next_page[:pos]
 
         link_found = True
-        link_count += 1
         visited.append(page)
 
-        for m in trace(page=next_page, end=end, visited=visited):
+        for m in trace(page=next_page, end=end):
             yield m
 
         break
+
     if not link_found:
         if whole_page:
             del visited[:]
             raise LinkNotFoundError(
-                    'No valid link found in page "{0}"'.format(
-                        page))
+                'No valid link found in page "{0}"'.format(page)
+            )
         else:
-            for m in trace(page=page,
-                    whole_page=True, end=end,
-                    visited=visited):
+            for m in trace(page=page, whole_page=True, end=end):
                 yield m
