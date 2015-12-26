@@ -86,7 +86,7 @@ def valid_page_name(page):
 
 def strip_parentheses(string):
     """
-    Remove parentheses from nesting_level string, leaving
+    Remove parentheses from a string, leaving
     parentheses between <tags> in place
 
     Args:
