@@ -92,7 +92,7 @@ def process(names, args, times=1):
 
     if not raised:
         print_log('---')
-        print_log('Took {0} link(s) and {1} seconds'.format(
+        print_log('Took {0} hop(s) and {1} seconds'.format(
                         link_count,
                         round(time.time() - start_time, 4)))
 
