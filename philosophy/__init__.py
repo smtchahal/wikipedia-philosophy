@@ -66,7 +66,8 @@ def valid_page_name(page):
     Returns:
         True if `page` is valid, False otherwise
     """
-    NON_MAINSPACE = [ 'File:',
+    NON_MAINSPACE = [
+                        'File:',
                         'File talk:',
                         'Wikipedia:',
                         'Wikipedia talk:',
@@ -81,7 +82,8 @@ def valid_page_name(page):
                         'Template talk:',
                         'Talk:',
                         'Category:',
-                        'Category talk:' ]
+                        'Category talk:'
+                    ]
     return all(not page.startswith(non_main) for non_main in NON_MAINSPACE)
 
 def strip_parentheses(string):
