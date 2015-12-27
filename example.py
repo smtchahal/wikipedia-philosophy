@@ -39,9 +39,9 @@ def getargs():
             a valid link cannot be found""", dest='infinite')
     parser.add_argument('-t', '--times', action='store', dest='times',
         default=1, type=int, metavar='times',
-        help='''run the script this many times, selecting a random
+        help="""run the script this many times, selecting a random
             page every time except the first (default: 1)
-            (anything less than 1 is infinity)''')
+            (anything less than 1 is infinity)""")
 
     return parser.parse_args()
 
@@ -49,7 +49,7 @@ def process(names, args, times=1):
     raised = False
     start_time = time.time()
     try:
-        link_count = 0
+        link_count = -1
         for s in names:
             if s == args.end:
                 print(bcolors.BOLD + s + bcolors.ENDC)
