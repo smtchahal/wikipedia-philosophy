@@ -91,11 +91,6 @@ print(list(philosophy.trace(page='Sliced bread', infinite=True,
 Note that `trace()` will always raise exceptions in case a loop is detected
 or if a valid link cannot be found within the page.
 
-## Dependencies
-The module depends on the following Python libraries.
-* [Requests](http://docs.python-requests.org/)
-* [lxml](http://lxml.de/)
-
 ## Example script
 ![example.py script in action](example.gif?raw=true "example.py script in action")
 

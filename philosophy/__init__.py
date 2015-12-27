@@ -52,7 +52,7 @@ is detected or if valid link cannot be found within the page.
 """
 
 import requests
-import urllib
+import urllib.parse
 from .exceptions import *
 import lxml.html as lh
 
@@ -225,7 +225,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
                             'table,a.new,i,#coordinates'):
         elm.drop_tree()
 
-    html = lh.fromstring(strip_parentheses(lh.tostring(html)))
+    html = lh.fromstring(strip_parentheses(lh.tostring(html).decode('utf-8')))
     link_found = False
     for elm, attr, link, pos in html.iterlinks():
         # Because .iterlinks() picks up 'src' and the like too
@@ -237,7 +237,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
             continue
 
         next_page = next_page[len('/wiki/'):]
-        next_page = urllib.unquote(next_page)
+        next_page = urllib.parse.unquote(next_page)
 
         if not valid_page_name(next_page):
             continue
