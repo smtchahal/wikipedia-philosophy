@@ -74,11 +74,6 @@ def process(names, args, times=1):
 
     except InvalidPageNameError as e:
         print_err(e)
-        print_log('---')
-        print_log('Visited {0} link(s), got an invalid page name,'
-                    + ' taking {1} seconds'.format(
-                        link_count,
-                        round(time.time() - start_time, 4)))
         raised = True
 
     except LinkNotFoundError as e:

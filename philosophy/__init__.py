@@ -51,6 +51,11 @@ Note that `trace()` will always raise exceptions in case a loop
 is detected or if valid link cannot be found within the page.
 """
 
+__version__ = '1.0.0'
+__author__ = 'Sumit Chahal'
+__license__ = 'MIT License'
+__copyright__ = 'Copyright 2015 Sumit Chahal'
+
 import requests
 import urllib.parse
 from .exceptions import *
@@ -206,8 +211,9 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
         del visited[:]
         raise LoopException('Loop detected')
 
-    # Don't yield if whole page requested
-    # (which should only be done as a second attempt)
+    # This makes sure that we don't yield `page` a second time
+    # (whole_page = True indicates that `page` has been processed once
+    # already)
     if not whole_page:
         yield page
 
