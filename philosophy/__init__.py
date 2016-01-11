@@ -166,7 +166,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
         LinkNotFoundError: if a valid link cannot be found for page
     """
     BASE_URL = 'https://en.wikipedia.org/w/api.php'
-    HEADERS = { 'User-Agent': 'The Philosophy Game/0.1',
+    HEADERS = { 'User-Agent': 'The Philosophy Game/1.0.0',
                 'Accept-Encoding': 'gzip' }
     if page is None:
         params = {
