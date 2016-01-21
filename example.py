@@ -57,7 +57,8 @@ def process(names, args, times=1):
                 print(s)
             link_count += 1
     except ConnectionError:
-        sys.exit('Network error, please check your connection')
+        print_err('Network error, please check your connection')
+        sys.exit(1)
 
     except MediaWikiError as e:
         print_err('Error: {0}: {1}'.format(

@@ -1,6 +1,4 @@
-"""
-The Philosophy Game
-~~~~~~~~~~~~~~~~~~~~~~~~~
+"""The Philosophy Game
 
 Clicking on the first non-parenthesized, non-italicized link,
 in the main text of a Wikipedia article, and then repeating
