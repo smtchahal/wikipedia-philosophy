@@ -179,6 +179,7 @@ optional arguments:
   -i, --infinite        don't stop execution until a loop is found or a valid
                         link cannot be found
   -t times, --times times
-                        run the script this many times (default: 1) (anything
-                        less than 1 is infinity)
+                        run the script this many times, selecting a random
+                        page every time except the first (default: 1)
+                        (anything less than 1 is infinity)
 ```
