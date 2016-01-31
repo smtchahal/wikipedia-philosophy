@@ -116,8 +116,9 @@ def main():
             infinite=args.infinite)
     process(names, args)
 
-try:
-    main()
-except KeyboardInterrupt:
-    print_err('Script interrupted')
-    sys.exit(1)
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print_err('Script interrupted')
+        sys.exit(1)
