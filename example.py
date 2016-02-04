@@ -17,7 +17,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 def print_err(msg):
-    print('{0}{1}{2}{3}'.format(bcolors.FAIL,
+    print('{}{}{}{}'.format(bcolors.FAIL,
                                 bcolors.BOLD,
                                 msg,
                                 bcolors.ENDC),
@@ -61,14 +61,14 @@ def process(names, args, times=1):
         sys.exit(1)
 
     except MediaWikiError as e:
-        print_err('Error: {0}: {1}'.format(
+        print_err('Error: {}: {}'.format(
                     e.errors['code'],
                     e.errors['info']))
         raised = True
 
     except LoopException as e:
-        print_log('---\n{0}, quitting...'.format(e))
-        print_log('Visited {0} link(s), got a loop, taking {1} seconds'.format(
+        print_log('---\n{}, quitting...'.format(e))
+        print_log('Visited {} link(s), got a loop, taking {} seconds'.format(
                         link_count,
                         round(time.time() - start_time, 4)))
         raised = True
@@ -80,15 +80,15 @@ def process(names, args, times=1):
     except LinkNotFoundError as e:
         print_err(e)
         print_log('---')
-        print_log(('Visited {0} link(s), could not find appropriate link'
-                 + ' in last link, taking {1} seconds').format(
+        print_log(('Visited {} link(s), could not find appropriate link'
+                 + ' in last link, taking {} seconds').format(
                         link_count,
                         round(time.time() - start_time, 4)))
         raised = True
 
     if not raised:
         print_log('---')
-        print_log('Took {0} hop(s) and {1} seconds'.format(
+        print_log('Took {} hop(s) and {} seconds'.format(
                         link_count,
                         round(time.time() - start_time, 4)))
 
