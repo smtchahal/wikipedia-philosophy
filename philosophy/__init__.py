@@ -261,7 +261,8 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
         link_found = True
         visited.append(page)
 
-        for m in trace(page=next_page, end=end):
+        for m in trace(page=next_page, end=end, whole_page=whole_page,
+            infinite=infinite):
             yield m
 
         break
@@ -273,5 +274,6 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
                 'No valid link found in page "{0}"'.format(page)
             )
         else:
-            for m in trace(page=page, whole_page=True, end=end):
+            for m in trace(page=page, whole_page=True, end=end,
+                infinite=infinite):
                 yield m
