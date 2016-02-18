@@ -16,12 +16,12 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def print_bold(msg):
+    print(bcolors.BOLD + msg + bcolors.ENDC)
+
 def print_err(msg):
-    print('{}{}{}{}'.format(bcolors.FAIL,
-                                bcolors.BOLD,
-                                msg,
-                                bcolors.ENDC),
-                    file=sys.stderr)
+    print('{}{}{}{}'.format(bcolors.FAIL, bcolors.BOLD, msg, bcolors.ENDC),
+                            file=sys.stderr)
 
 def print_log(msg):
     print(bcolors.OKGREEN + msg + bcolors.ENDC)
@@ -42,17 +42,22 @@ def getargs():
         help="""run the script this many times, selecting a random
             page every time except the first (default: 1)
             (anything less than 1 is infinity)""")
+    parser.add_argument('-n', '--nocolors', action='store_true',
+        help='Don\'t print terminal colors', dest='nocolors')
 
     return parser.parse_args()
 
 def process(names, args, times=1):
+    global print_err, print_log, print_bold
     raised = False
     start_time = time.time()
+    if args.nocolors:
+        print_err = print_log = print_bold = print
     try:
         link_count = -1
         for s in names:
             if s == args.end:
-                print(bcolors.BOLD + s + bcolors.ENDC)
+                print_bold(s)
             else:
                 print(s)
             link_count += 1
