@@ -29,7 +29,7 @@ def print_log(msg):
 def getargs():
     parser = argparse.ArgumentParser(description='Play The Philosophy Game')
     parser.add_argument('start', action='store', type=str,
-        metavar='initial-pagename', nargs='*',
+        metavar='start', nargs='*',
         help='the initial Wikipedia pagename to start with')
     parser.add_argument('-e', '--end', action='store', nargs='+',
         default=['Philosophy'], type=str, metavar='end', dest='end',

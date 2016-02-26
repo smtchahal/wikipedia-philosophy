@@ -162,24 +162,3 @@ Visited 12 link(s), got a loop, taking 28.1101 seconds
 
 You can always view help for the script using the `--help` (or `-h`)
 parameter.
-```
-usage: example.py [-h] [-e end [end ...]] [-i] [-t times]
-                  [initial-pagename [initial-pagename ...]]
-
-Play The Philosophy Game
-
-positional arguments:
-  initial-pagename      the initial Wikipedia pagename to start with
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -e end [end ...], --end end [end ...]
-                        Wikipedia pagename to terminate at (default:
-                        'Philosophy')
-  -i, --infinite        don't stop execution until a loop is found or a valid
-                        link cannot be found
-  -t times, --times times
-                        run the script this many times, selecting a random
-                        page every time except the first (default: 1)
-                        (anything less than 1 is infinity)
-```
