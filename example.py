@@ -57,7 +57,7 @@ def process(names, args, times=1):
     try:
         link_count = -1
         for s in names:
-            if s == args.end:
+            if s == args.end and not args.infinite:
                 print_bold(s)
             else:
                 print(s)
