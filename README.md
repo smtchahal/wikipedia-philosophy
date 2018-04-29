@@ -84,8 +84,7 @@ In the following example, we set `infinite` to `True`, so that
 `trace()` disregards the value of `end` and doesn't stop.
 
 ```python
-print(list(philosophy.trace(page='Sliced bread', infinite=True,
-				end="Doesn't matter")))
+print(list(philosophy.trace(page='Sliced bread', infinite=True, end="Doesn't matter")))
 ```
 
 Note that `trace()` will always raise exceptions in case a loop is detected

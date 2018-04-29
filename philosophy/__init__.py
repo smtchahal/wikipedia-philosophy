@@ -185,7 +185,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
 
     if not valid_page_name(page):
         del visited[:]
-        raise InvalidPageNameError("Invalid page name '{0}'".format(page))
+        raise InvalidPageNameError("Invalid page name: {0!r}".format(page))
 
     params = {
         'action': 'parse',

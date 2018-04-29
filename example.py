@@ -19,16 +19,16 @@ class bcolors:
 
 
 def print_bold(msg):
-    print(bcolors.BOLD + msg + bcolors.ENDC)
+    print(bcolors.BOLD, msg, bcolors.ENDC, sep='')
 
 
 def print_err(msg):
-    print('{}{}{}{}'.format(bcolors.FAIL, bcolors.BOLD, msg, bcolors.ENDC),
-          file=sys.stderr)
+    print(bcolors.FAIL, bcolors.BOLD, msg, bcolors.ENDC,
+          sep='', file=sys.stderr)
 
 
 def print_log(msg):
-    print(bcolors.OKGREEN + msg + bcolors.ENDC)
+    print(bcolors.OKGREEN, msg, bcolors.ENDC, sep='')
 
 
 def getargs():
@@ -107,7 +107,7 @@ def process(names, args, times=1):
         return
 
     # New line for separation
-    print('')
+    print()
 
     names = philosophy.trace(end=args.end, infinite=args.infinite)
     process(names, args, times=times+1)
@@ -115,17 +115,16 @@ def process(names, args, times=1):
 
 def main():
     args = getargs()
-    args.start = ' '.join(args.start)
-    args.end = ' '.join(args.end)
+    start = ' '.join(args.start)
+    end = ' '.join(args.end)
+    infinite = args.infinite
 
-    if args.start == '':
-        args.start = None
+    if start == '':
+        start = None
     if args.end == '':
-        args.end = 'Philosophy'
+        end = 'Philosophy'
 
-    names = philosophy.trace(page=args.start,
-                             end=args.end,
-                             infinite=args.infinite)
+    names = philosophy.trace(page=start, end=end, infinite=infinite)
     process(names, args)
 
 
