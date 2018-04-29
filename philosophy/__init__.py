@@ -52,7 +52,7 @@ is detected or if valid link cannot be found within the page.
 __version__ = '1.0.0'
 __author__ = 'Sumit Chahal'
 __license__ = 'MIT License'
-__copyright__ = 'Copyright 2015 Sumit Chahal'
+__copyright__ = 'Copyright 2015-2018 Sumit Chahal'
 
 import requests
 import urllib.parse
