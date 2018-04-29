@@ -47,8 +47,6 @@ def getargs():
                         help="""run the script this many times, selecting a random
                                 page every time except the first (default: 1)
                                 (anything less than 1 is infinity)""")
-    parser.add_argument('-n', '--nocolors', action='store_true', default=False,
-                        help='Don\'t print terminal colors', dest='nocolors')
 
     return parser.parse_args()
 
@@ -127,7 +125,7 @@ def main(args):
 if __name__ == '__main__':
     try:
         args = getargs()
-        if args.nocolors:
+        if not sys.stdout.isatty():
             print_bold = print_log = print_err = print
         main(args)
     except KeyboardInterrupt:
