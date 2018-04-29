@@ -47,18 +47,18 @@ def getargs():
                         help="""run the script this many times, selecting a random
                                 page every time except the first (default: 1)
                                 (anything less than 1 is infinity)""")
-    parser.add_argument('-n', '--nocolors', action='store_true',
+    parser.add_argument('-n', '--nocolors', action='store_true', default=False,
                         help='Don\'t print terminal colors', dest='nocolors')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.start = ' '.join(args.start)
+    args.end = ' '.join(args.end)
+    return args
 
 
 def process(names, args, times=1):
-    global print_err, print_log, print_bold
     raised = False
     start_time = time.time()
-    if args.nocolors:
-        print_err = print_log = print_bold = print
     try:
         link_count = -1
         for s in names:
@@ -113,10 +113,9 @@ def process(names, args, times=1):
     process(names, args, times=times+1)
 
 
-def main():
-    args = getargs()
-    start = ' '.join(args.start)
-    end = ' '.join(args.end)
+def main(args):
+    start = args.start
+    end = args.end
     infinite = args.infinite
 
     if start == '':
@@ -130,7 +129,10 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        args = getargs()
+        if args.nocolors:
+            print_bold = print_log = print_err = print
+        main(args)
     except KeyboardInterrupt:
         print_err('Script interrupted')
         sys.exit(1)
