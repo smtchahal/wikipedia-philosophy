@@ -59,6 +59,7 @@ import urllib.parse
 from .exceptions import *
 import lxml.html as lh
 
+
 def valid_page_name(page):
     """
     Checks for valid mainspace Wikipedia page name
@@ -69,25 +70,24 @@ def valid_page_name(page):
     Returns:
         True if `page` is valid, False otherwise
     """
-    NON_MAINSPACE = [
-                        'File:',
-                        'File talk:',
-                        'Wikipedia:',
-                        'Wikipedia talk:',
-                        'Project:',
-                        'Project talk:',
-                        'Portal:',
-                        'Portal talk:',
-                        'Special:',
-                        'Help:',
-                        'Help talk:',
-                        'Template:',
-                        'Template talk:',
-                        'Talk:',
-                        'Category:',
-                        'Category talk:'
-                    ]
+    NON_MAINSPACE = ['File:',
+                     'File talk:',
+                     'Wikipedia:',
+                     'Wikipedia talk:',
+                     'Project:',
+                     'Project talk:',
+                     'Portal:',
+                     'Portal talk:',
+                     'Special:',
+                     'Help:',
+                     'Help talk:',
+                     'Template:',
+                     'Template talk:',
+                     'Talk:',
+                     'Category:',
+                     'Category talk:']
     return all(not page.startswith(non_main) for non_main in NON_MAINSPACE)
+
 
 def strip_parentheses(string):
     """
@@ -127,9 +127,11 @@ def strip_parentheses(string):
 
     return result
 
+
 # Used to store pages that have been visited in order to detect loops
 # Deleted every time trace() exits (regardless of how)
 visited = []
+
 
 def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
     """
@@ -164,8 +166,8 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
         LinkNotFoundError: if a valid link cannot be found for page
     """
     BASE_URL = 'https://en.wikipedia.org/w/api.php'
-    HEADERS = { 'User-Agent': 'The Philosophy Game/1.0.0',
-                'Accept-Encoding': 'gzip' }
+    HEADERS = {'User-Agent': 'The Philosophy Game/1.0.0',
+               'Accept-Encoding': 'gzip'}
     if page is None:
         params = {
             'action': 'query',
@@ -229,7 +231,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
     # images, red links, hatnotes, italicized text
     # and anything that's strictly not text-only
     for elm in html.cssselect('.reference,span,div,.thumb,'
-                            'table,a.new,i,#coordinates'):
+                              'table,a.new,i,#coordinates'):
         elm.drop_tree()
 
     html = lh.fromstring(strip_parentheses(lh.tostring(html).decode('utf-8')))
@@ -263,7 +265,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
         visited.append(page)
 
         for m in trace(page=next_page, end=end, whole_page=whole_page,
-            infinite=infinite):
+                       infinite=infinite):
             yield m
 
         break
@@ -276,5 +278,5 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
             )
         else:
             for m in trace(page=page, whole_page=True, end=end,
-                infinite=infinite):
+                           infinite=infinite):
                 yield m

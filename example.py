@@ -6,6 +6,7 @@ import sys
 import time
 import argparse
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -16,36 +17,41 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
 def print_bold(msg):
     print(bcolors.BOLD + msg + bcolors.ENDC)
 
+
 def print_err(msg):
     print('{}{}{}{}'.format(bcolors.FAIL, bcolors.BOLD, msg, bcolors.ENDC),
-                            file=sys.stderr)
+          file=sys.stderr)
+
 
 def print_log(msg):
     print(bcolors.OKGREEN + msg + bcolors.ENDC)
 
+
 def getargs():
     parser = argparse.ArgumentParser(description='Play The Philosophy Game')
     parser.add_argument('start', action='store', type=str,
-        metavar='start', nargs='*',
-        help='the initial Wikipedia pagename to start with')
+                        metavar='start', nargs='*',
+                        help='the initial Wikipedia pagename to start with')
     parser.add_argument('-e', '--end', action='store', nargs='+',
-        default=['Philosophy'], type=str, metavar='end', dest='end',
-        help='Wikipedia pagename to terminate at (default: \'Philosophy\')')
+                        default=['Philosophy'], type=str, metavar='end', dest='end',
+                        help='Wikipedia pagename to terminate at (default: \'Philosophy\')')
     parser.add_argument('-i', '--infinite', action='store_true',
-        help="""don't stop execution until a loop is found or
-            a valid link cannot be found""", dest='infinite')
+                        help="""don't stop execution until a loop is found or
+                                a valid link cannot be found""", dest='infinite')
     parser.add_argument('-t', '--times', action='store', dest='times',
-        default=1, type=int, metavar='times',
-        help="""run the script this many times, selecting a random
-            page every time except the first (default: 1)
-            (anything less than 1 is infinity)""")
+                        default=1, type=int, metavar='times',
+                        help="""run the script this many times, selecting a random
+                                page every time except the first (default: 1)
+                                (anything less than 1 is infinity)""")
     parser.add_argument('-n', '--nocolors', action='store_true',
-        help='Don\'t print terminal colors', dest='nocolors')
+                        help='Don\'t print terminal colors', dest='nocolors')
 
     return parser.parse_args()
+
 
 def process(names, args, times=1):
     global print_err, print_log, print_bold
@@ -67,15 +73,15 @@ def process(names, args, times=1):
 
     except MediaWikiError as e:
         print_err('Error: {}: {}'.format(
-                    e.errors['code'],
-                    e.errors['info']))
+            e.errors['code'],
+            e.errors['info']))
         raised = True
 
     except LoopException as e:
         print_log('---\n{}, quitting...'.format(e))
         print_log('Visited {} link(s), got a loop, taking {} seconds'.format(
-                        link_count,
-                        round(time.time() - start_time, 4)))
+            link_count,
+            round(time.time() - start_time, 4)))
         raised = True
 
     except InvalidPageNameError as e:
@@ -86,16 +92,16 @@ def process(names, args, times=1):
         print_err(e)
         print_log('---')
         print_log(('Visited {} link(s), could not find appropriate link'
-                 + ' in last link, taking {} seconds').format(
-                        link_count,
-                        round(time.time() - start_time, 4)))
+                   + ' in last link, taking {} seconds').format(
+            link_count,
+            round(time.time() - start_time, 4)))
         raised = True
 
     if not raised:
         print_log('---')
         print_log('Took {} hop(s) and {} seconds'.format(
-                        link_count,
-                        round(time.time() - start_time, 4)))
+            link_count,
+            round(time.time() - start_time, 4)))
 
     if times == args.times:
         return
@@ -105,6 +111,7 @@ def process(names, args, times=1):
 
     names = philosophy.trace(end=args.end, infinite=args.infinite)
     process(names, args, times=times+1)
+
 
 def main():
     args = getargs()
@@ -117,9 +124,10 @@ def main():
         args.end = 'Philosophy'
 
     names = philosophy.trace(page=args.start,
-            end=args.end,
-            infinite=args.infinite)
+                             end=args.end,
+                             infinite=args.infinite)
     process(names, args)
+
 
 if __name__ == '__main__':
     try:

@@ -1,12 +1,15 @@
 from requests.exceptions import ConnectionError
 
+
 class MediaWikiError(Exception):
     """
     Raised when the MediaWiki API returns an error.
     """
+
     def __init__(self, message, errors):
         super(MediaWikiError, self).__init__(message)
         self.errors = errors
+
 
 class LoopException(Exception):
     """
@@ -14,12 +17,14 @@ class LoopException(Exception):
     """
     pass
 
+
 class InvalidPageNameError(Exception):
     """
     Raised when an invalid page name is
     passed to trace().
     """
     pass
+
 
 class LinkNotFoundError(Exception):
     """
