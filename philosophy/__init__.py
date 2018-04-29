@@ -206,6 +206,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
 
     # Detect loop
     if page in visited:
+        yield page
         del visited[:]
         raise LoopException('Loop detected')
 
