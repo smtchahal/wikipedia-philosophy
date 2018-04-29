@@ -34,10 +34,10 @@ def print_log(msg):
 def getargs():
     parser = argparse.ArgumentParser(description='Play The Philosophy Game')
     parser.add_argument('start', action='store', type=str,
-                        metavar='start', nargs='*',
+                        metavar='start', nargs='?',
                         help='the initial Wikipedia pagename to start with')
-    parser.add_argument('-e', '--end', action='store', nargs='+',
-                        default=['Philosophy'], type=str, metavar='end', dest='end',
+    parser.add_argument('-e', '--end', action='store', default='Philosophy',
+                        type=str, metavar='end', dest='end',
                         help='Wikipedia pagename to terminate at (default: \'Philosophy\')')
     parser.add_argument('-i', '--infinite', action='store_true',
                         help="""don't stop execution until a loop is found or
@@ -50,10 +50,7 @@ def getargs():
     parser.add_argument('-n', '--nocolors', action='store_true', default=False,
                         help='Don\'t print terminal colors', dest='nocolors')
 
-    args = parser.parse_args()
-    args.start = ' '.join(args.start)
-    args.end = ' '.join(args.end)
-    return args
+    return parser.parse_args()
 
 
 def process(names, args, times=1):
