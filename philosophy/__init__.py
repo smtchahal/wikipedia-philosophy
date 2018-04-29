@@ -114,9 +114,7 @@ def strip_parentheses(string):
         if nesting_level < 1:
             if c == '(':
                 nested_parentheses += 1
-            if nested_parentheses > 0:
-                result += ' '
-            else:
+            if nested_parentheses < 1:
                 result += c
             if c == ')':
                 nested_parentheses -= 1
