@@ -96,6 +96,13 @@ or if a valid link cannot be found within the page.
 I've included a simple ready-to-use [example script](example.py) that you
 can start using immediately without making your own.
 
+### Docker image
+You can also use the Docker image to run the example script, if you prefer.
+
+```bash
+$ docker run -it smtchahal/wikipedia-philosophy
+```
+
 ### Usage examples
 Here's the simplest example.
 ```
