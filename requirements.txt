@@ -1,4 +1,4 @@
 cssselect==1.0.3
-lxml==4.2.1
+lxml==4.6.3
 pytest==3.5.1
 requests==2.20.0
