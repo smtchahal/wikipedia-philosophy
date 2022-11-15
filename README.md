@@ -100,7 +100,7 @@ can start using immediately without making your own.
 You can also use the Docker image to run the example script, if you prefer.
 
 ```bash
-$ docker run --rm -it smtchahal/wikipedia-philosophy
+docker run --rm -it smtchahal/wikipedia-philosophy
 ```
 
 ### Usage examples
