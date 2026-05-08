@@ -60,6 +60,21 @@ from .exceptions import *
 import lxml.html as lh
 
 
+def _get_json(url, params, headers):
+    response = requests.get(url, params=params, headers=headers)
+    if not response.ok:
+        raise MediaWikiError(
+            'Server error',
+            {'code': str(response.status_code), 'info': response.reason}
+        )
+    try:
+        return response.json()
+    except ValueError:
+        raise ConnectionError(
+            'Failed to decode API response (HTTP {})'.format(response.status_code)
+        )
+
+
 def valid_page_name(page):
     """
     Checks for valid mainspace Wikipedia page name
@@ -174,7 +189,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
             'rnnamespace': 0,
             'format': 'json'
         }
-        result = requests.get(BASE_URL, params=params, headers=HEADERS).json()
+        result = _get_json(BASE_URL, params, HEADERS)
         if 'error' in result:
             del visited[:]
             raise MediaWikiError('MediaWiki error', result['error'])
@@ -196,7 +211,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
     if not whole_page:
         params['section'] = 0
 
-    result = requests.get(BASE_URL, params=params, headers=HEADERS).json()
+    result = _get_json(BASE_URL, params, HEADERS)
 
     if 'error' in result:
         del visited[:]
@@ -229,7 +244,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
     # images, red links, hatnotes, italicized text
     # and anything that's strictly not text-only
     for elm in html.cssselect('.reference,span,div,.thumb,'
-                              'table,a.new,i,#coordinates'):
+                              'table,a.new,i,#coordinates,style,script'):
         elm.drop_tree()
 
     html = lh.fromstring(strip_parentheses(lh.tostring(html).decode('utf-8')))
