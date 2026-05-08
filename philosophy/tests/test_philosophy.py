@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, PropertyMock
 
 import pytest
 
@@ -17,6 +17,13 @@ from philosophy.exceptions import (
 def _resp(data):
     m = MagicMock()
     m.json.return_value = data
+    return m
+
+
+def _empty_resp(status_code=503):
+    m = MagicMock()
+    m.status_code = status_code
+    m.json.side_effect = ValueError('No JSON object could be decoded')
     return m
 
 
@@ -304,6 +311,27 @@ class TestTrace:
         assert result == ['Start Page', 'Philosophy']
 
     @patch('philosophy.requests.get')
+    def test_inline_style_with_css_child_combinator(self, mock_get):
+        # Wikipedia inlines <style> tags whose CSS uses the child combinator (>).
+        # strip_parentheses tracks nesting_level via '<' and '>', so a bare '>'
+        # in CSS content drives nesting_level negative and corrupts subsequent
+        # HTML, causing all links to vanish.  The fix: drop <style>/<script>
+        # elements before serialising so they never reach strip_parentheses.
+        html_with_style = (
+            '<div>'
+            '<style>.mw-parser-output .hlist ol>li{counter-increment:x}'
+            '.sidebar a>img{max-width:none}</style>'
+            '<p><a href="/wiki/Philosophy">Philosophy</a></p>'
+            '</div>'
+        )
+        mock_get.side_effect = [
+            _parse('Cricket', html_with_style),
+            _parse('Philosophy', NO_WIKI_LINKS),
+        ]
+        result = list(trace(page='Cricket'))
+        assert result == ['Cricket', 'Philosophy']
+
+    @patch('philosophy.requests.get')
     def test_named_anchor_stripped_from_link(self, mock_get):
         # /wiki/Page#Section → 'Page' after anchor is removed
         # (line 260: `next_page = next_page[:pos]`)
@@ -314,6 +342,20 @@ class TestTrace:
         ]
         result = list(trace(page='Start Page'))
         assert result == ['Start Page', 'Philosophy']
+
+    @patch('philosophy.requests.get')
+    def test_empty_response_raises_connection_error(self, mock_get):
+        mock_get.return_value = _empty_resp(503)
+        from requests.exceptions import ConnectionError as ReqConnError
+        with pytest.raises(ReqConnError):
+            list(trace(page='Some Page'))
+
+    @patch('philosophy.requests.get')
+    def test_empty_response_on_random_page_raises_connection_error(self, mock_get):
+        mock_get.return_value = _empty_resp(429)
+        from requests.exceptions import ConnectionError as ReqConnError
+        with pytest.raises(ReqConnError):
+            list(trace())
 
     @patch('philosophy.requests.get')
     def test_whole_page_retry_propagates_loop(self, mock_get):
