@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests with coverage
+        run: |
+          mkdir -p coverage-out
+          docker compose run --rm -v "$PWD/coverage-out:/coverage-out" test \
+            --cov-report=xml:/coverage-out/coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-out/coverage.xml

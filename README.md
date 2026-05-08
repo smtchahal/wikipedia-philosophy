@@ -1,5 +1,7 @@
 # The Philosophy Game
 
+[![CI](https://github.com/smtchahal/wikipedia-philosophy/actions/workflows/ci.yml/badge.svg)](https://github.com/smtchahal/wikipedia-philosophy/actions/workflows/ci.yml)
+
 A Python module that allows you to play Wikipedia's
 ["Getting to Philosophy"](https://en.wikipedia.org/wiki/Wikipedia:Getting_to_Philosophy)
 game.
