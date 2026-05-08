@@ -16,13 +16,16 @@ from philosophy.exceptions import (
 
 def _resp(data):
     m = MagicMock()
+    m.ok = True
     m.json.return_value = data
     return m
 
 
-def _empty_resp(status_code=503):
+def _empty_resp(status_code=503, reason='Service Unavailable'):
     m = MagicMock()
     m.status_code = status_code
+    m.ok = False
+    m.reason = reason
     m.json.side_effect = ValueError('No JSON object could be decoded')
     return m
 
@@ -344,18 +347,20 @@ class TestTrace:
         assert result == ['Start Page', 'Philosophy']
 
     @patch('philosophy.requests.get')
-    def test_empty_response_raises_connection_error(self, mock_get):
-        mock_get.return_value = _empty_resp(503)
-        from requests.exceptions import ConnectionError as ReqConnError
-        with pytest.raises(ReqConnError):
+    def test_empty_response_raises_mediawiki_error(self, mock_get):
+        mock_get.return_value = _empty_resp(503, 'Service Unavailable')
+        with pytest.raises(MediaWikiError) as exc_info:
             list(trace(page='Some Page'))
+        assert exc_info.value.errors['code'] == '503'
+        assert exc_info.value.errors['info'] == 'Service Unavailable'
 
     @patch('philosophy.requests.get')
-    def test_empty_response_on_random_page_raises_connection_error(self, mock_get):
-        mock_get.return_value = _empty_resp(429)
-        from requests.exceptions import ConnectionError as ReqConnError
-        with pytest.raises(ReqConnError):
+    def test_empty_response_on_random_page_raises_mediawiki_error(self, mock_get):
+        mock_get.return_value = _empty_resp(429, 'Too Many Requests')
+        with pytest.raises(MediaWikiError) as exc_info:
             list(trace())
+        assert exc_info.value.errors['code'] == '429'
+        assert exc_info.value.errors['info'] == 'Too Many Requests'
 
     @patch('philosophy.requests.get')
     def test_whole_page_retry_propagates_loop(self, mock_get):

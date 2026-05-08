@@ -62,6 +62,11 @@ import lxml.html as lh
 
 def _get_json(url, params, headers):
     response = requests.get(url, params=params, headers=headers)
+    if not response.ok:
+        raise MediaWikiError(
+            'Server error',
+            {'code': str(response.status_code), 'info': response.reason}
+        )
     try:
         return response.json()
     except ValueError:
