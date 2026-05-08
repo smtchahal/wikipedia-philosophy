@@ -363,6 +363,45 @@ class TestTrace:
         assert exc_info.value.errors['info'] == 'Too Many Requests'
 
     @patch('philosophy.requests.get')
+    def test_figure_caption_link_ignored(self, mock_get):
+        # Wikipedia now uses <figure>/<figcaption> for image thumbnails.
+        # Links inside captions must be skipped; the real first link follows.
+        html = (
+            '<div>'
+            '<figure class="mw-default-size" typeof="mw:File/Thumb">'
+            '<a href="/wiki/File:Foo.jpg" class="mw-file-description"><img/></a>'
+            '<figcaption>A caption with a <a href="/wiki/Rotary_dial">rotary dial</a></figcaption>'
+            '</figure>'
+            '<p>Text with a <a href="/wiki/Philosophy">Philosophy</a> link.</p>'
+            '</div>'
+        )
+        mock_get.side_effect = [
+            _parse('Telephone', html),
+            _parse('Philosophy', NO_WIKI_LINKS),
+        ]
+        result = list(trace(page='Telephone'))
+        assert result == ['Telephone', 'Philosophy']
+
+    @patch('philosophy.requests.get')
+    def test_figure_without_figcaption_link_ignored(self, mock_get):
+        # Links directly inside <figure> (e.g. the file-description wrapper)
+        # should also be skipped.
+        html = (
+            '<div>'
+            '<figure typeof="mw:File/Thumb">'
+            '<a href="/wiki/File:Foo.jpg" class="mw-file-description"><img/></a>'
+            '</figure>'
+            '<p><a href="/wiki/Philosophy">Philosophy</a></p>'
+            '</div>'
+        )
+        mock_get.side_effect = [
+            _parse('Start Page', html),
+            _parse('Philosophy', NO_WIKI_LINKS),
+        ]
+        result = list(trace(page='Start Page'))
+        assert result == ['Start Page', 'Philosophy']
+
+    @patch('philosophy.requests.get')
     def test_whole_page_retry_propagates_loop(self, mock_get):
         # section=0 has no links → whole_page retry; the retry chain loops
         # back to A, which is in visited.  The loop's `yield page` propagates

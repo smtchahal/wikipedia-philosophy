@@ -243,7 +243,7 @@ def trace(page=None, end='Philosophy', whole_page=False, infinite=False):
     # This takes care of most MediaWiki templates,
     # images, red links, hatnotes, italicized text
     # and anything that's strictly not text-only
-    for elm in html.cssselect('.reference,span,div,.thumb,'
+    for elm in html.cssselect('.reference,span,div,.thumb,figure,figcaption,'
                               'table,a.new,i,#coordinates,style,script'):
         elm.drop_tree()
 
